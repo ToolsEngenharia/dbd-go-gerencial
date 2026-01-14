@@ -1,0 +1,156 @@
+.main {
+  background-color: #ffffff;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+  display: flex;
+  justify-content: center;
+  /* min-height: 100vh; */
+  margin: 0;
+  user-select: none;
+}
+
+.calendar-container {
+  /* width: 100%;
+  max-width: 900px; */
+  padding: 10px 0 0 0;
+  box-sizing: border-box;
+}
+
+.calendar-header {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  margin-bottom: 20px;
+  width: 100%;
+  padding: 0 10px; 
+  box-sizing: border-box;
+}
+
+.header-left {
+  justify-self: start;
+}
+
+.header-title {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #2d3748;
+  white-space: nowrap;
+}
+
+.header-right {
+  display: flex;
+  gap: 8px;
+  justify-self: end;
+}
+
+.nav-btn {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #2d3748;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+}
+
+.nav-btn:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.text-btn {
+  width: auto;
+  padding: 0 16px;
+  font-weight: 600;
+  font-size: 0.9rem;
+}
+
+.calendar-table {
+  width: 100%;
+  table-layout: fixed; 
+  border-collapse: separate;
+  border-spacing: 10px; 
+}
+
+th {
+  color: #a0aec0;
+  font-weight: 700;
+  font-size: 0.8rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  padding-bottom: 10px;
+  text-align: center;
+}
+
+td {
+  background-color: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  height: 90px;
+  vertical-align: top;
+  position: relative;
+  transition: all 0.2s ease;
+  cursor: default;
+}
+
+td:hover {
+  background-color: #f7fafc;
+}
+
+.day-number {
+  display: block;
+  font-weight: 600;
+  padding: 8px 12px;
+  color: #2d3748;
+  font-size: 1rem;
+}
+
+td.is-today {
+  border-color:  var(--st-primary-color);
+  background-color: #ebf8ff;
+}
+
+td.is-today .day-number {
+  color: var(--st-primary-color);
+}
+
+.status-icon {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-top: 5px;
+}
+
+.icon-box {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.check .icon-box {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
+.x .icon-box {
+  background-color: #fee2e2;
+  color: #dc2626;
+}
+
+td:empty {
+  border: none;
+  background: transparent;
+  cursor: default;
+}
