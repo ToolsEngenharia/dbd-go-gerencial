@@ -78,19 +78,19 @@ if sel_obra:
 
 for obra in obras:
     monday_obra = data_monday[data_monday['SIGLA'] == obra]
-    with st.expander(obra, expanded=True):
-        tabStatus, tabPBI, tabVISI, tabRDO = st.tabs(['Status RDO', 'Relatório Gerencial', 'VISI', 'RDO + Efetivo'])
-        with tabStatus:
-            datas = data_rdo[data_rdo['obra'] == obra]['date_in'].tolist()
-            if datas:
+    datas = data_rdo[data_rdo['obra'] == obra]['date_in'].tolist()
+    if datas:
+        with st.expander(obra, expanded=True):
+            tabStatus, tabPBI, tabVISI, tabRDO = st.tabs(['Status RDO', 'Relatório Gerencial', 'VISI', 'RDO + Efetivo'])
+            with tabStatus:
                 datas_dict = {str(data): "check" for data in datas}
                 mes = calen(data=datas_dict, on_clicked_change=lambda: None)
-        with tabPBI:
-            components.iframe(monday_obra['PBI_RG'].iloc[0], height=500)
-        with tabVISI:
-            components.iframe(monday_obra['VISI'].iloc[0], height=500)
-        with tabRDO:
-            components.iframe(monday_obra['PBI_RE'].iloc[0], height=500)
+            with tabPBI:
+                components.iframe(monday_obra['PBI_RG'].iloc[0], height=500)
+            with tabVISI:
+                components.iframe(monday_obra['VISI'].iloc[0], height=500)
+            with tabRDO:
+                components.iframe(monday_obra['PBI_RE'].iloc[0], height=500)
         
 # with st.container(border=True):
 #     mes = calen(data=datas, on_clicked_change=lambda: None)
