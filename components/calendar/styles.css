@@ -21,7 +21,7 @@
   align-items: center;
   margin-bottom: 20px;
   width: 100%;
-  padding: 0 10px; 
+  padding: 0 10px;
   box-sizing: border-box;
 }
 
@@ -58,7 +58,7 @@
   align-items: center;
   justify-content: center;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 2px rgba(0,0,0,0.05);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
 }
 
 .nav-btn:hover {
@@ -75,9 +75,9 @@
 
 .calendar-table {
   width: 100%;
-  table-layout: fixed; 
+  table-layout: fixed;
   border-collapse: separate;
-  border-spacing: 10px; 
+  border-spacing: 10px;
 }
 
 th {
@@ -114,7 +114,7 @@ td:hover {
 }
 
 td.is-today {
-  border-color:  var(--st-primary-color);
+  border-color: var(--st-primary-color);
   background-color: #ebf8ff;
 }
 
@@ -153,4 +153,14 @@ td:empty {
   border: none;
   background: transparent;
   cursor: default;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+button:disabled:hover {
+  background: white;
+  border-color: #e2e8f0;
 }

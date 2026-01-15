@@ -78,6 +78,8 @@ export default function (component) {
     }
     parentElement.querySelector("#monthYear").textContent = monthNames[month] + " " + year;
     setTriggerValue('clicked',`${month + 1}-${year}`);
+    const now = new Date();
+    parentElement.querySelector("#nextMonth").disabled = now.getMonth() === month && now.getFullYear() === year;
   }
 
   function changeMonth(offset) {
