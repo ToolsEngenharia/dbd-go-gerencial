@@ -10,10 +10,9 @@ from data.supabase import fetch_data_from_tablefull
 data_rdo = pd.DataFrame(fetch_data_from_tablefull("Bot_Atividade"))
 data_monday = pd.DataFrame(get_dataModay(926240878))
 data_monday['PRODUTO'] = data_monday['PRODUTO'].str.replace('GERENCIAMENTO DE OBRA ', '', regex=False)
+data_monday = data_monday[~data_monday['RCR'].isin(['', 'DELETED MEMBER', 'MEMBRO EXCLUÍDO'])]
 
 obras = data_monday['SIGLA'].dropna().unique().tolist()
-rcrs = data_monday['RCR'].dropna().unique().tolist()
-cidades = data_monday['CIDADE'].dropna().unique().tolist()
 prod = data_monday['PRODUTO'].dropna().unique().tolist()
 
 option_view = {
@@ -34,15 +33,21 @@ with col3:
 st.write('####')
 with st.expander("Filtros", expanded=True, icon="⚙️"):
     col01, col02, col03, col04 = st.columns(4)
+    df_filtered = data_monday.copy()
+
     sel_prod = col01.pills('Selecione a Produto', options=prod, selection_mode='multi', key="sel_fase", default=prod[0])
     if sel_prod:
-        data_monday = data_monday[data_monday['PRODUTO'].isin(sel_prod)]
-        rcrs = data_monday['RCR'].dropna().unique().tolist()
-        cidades = data_monday['CIDADE'].dropna().unique().tolist()
-        obras = data_monday['SIGLA'].dropna().unique().tolist()
-    # sel_rcr = col03.multiselect('Selecione o RCR', options=rcrs, key='sel_rcr')
-    # sel_cid = col04.multiselect('Selecione a Cidade', options=cidades, key='sel_cid')
-    sel_obra = col02.multiselect("Filtrar por Obra (Sigla)", options=obras, key='sel_obra')
+        df_filtered = df_filtered[df_filtered['PRODUTO'].isin(sel_prod)]
+
+    sel_rcr = col03.multiselect('Selecione o RCR', options=df_filtered['RCR'].dropna().unique().tolist(), key='sel_rcr')
+    if sel_rcr:
+        df_filtered = df_filtered[df_filtered['RCR'].isin(sel_rcr)]
+
+    sel_cid = col04.multiselect('Selecione a Cidade', options=df_filtered['CIDADE'].dropna().unique().tolist(), key='sel_cid')
+    if sel_cid:
+        df_filtered = df_filtered[df_filtered['CIDADE'].isin(sel_cid)]
+
+    sel_obra = col02.multiselect("Filtrar por Obra (Sigla)", options=df_filtered['SIGLA'].dropna().unique().tolist(), key='sel_obra')
 
 # st.dataframe(data_monday)
 
@@ -73,10 +78,7 @@ calen = stc.component(
     css=pathlib.Path(frontend_dir / "styles.css").read_text(encoding="utf-8")
 )
 
-if sel_obra:
-    obras = sel_obra
-
-for obra in obras:
+for obra in df_filtered['SIGLA'].unique().tolist():
     monday_obra = data_monday[data_monday['SIGLA'] == obra]
     datas = data_rdo[data_rdo['obra'] == obra]['date_in'].tolist()
     if datas:
