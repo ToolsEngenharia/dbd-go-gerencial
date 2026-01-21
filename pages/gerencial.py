@@ -2,10 +2,17 @@ import pathlib
 import pandas as pd
 import streamlit as st
 import streamlit.components.v2 as stc
-import streamlit.components.v1 as components
 
 from data.monday import get_dataModay
 from data.supabase import fetch_data_from_tablefull
+
+frontend_dir = pathlib.Path(__file__).parent.resolve().parent / "components" / "calendarTabular"
+calen = stc.component(
+    "calend",
+    html=pathlib.Path(frontend_dir / "index.html").read_text(encoding="utf-8"),
+    js=pathlib.Path(frontend_dir / "script.js").read_text(encoding="utf-8"),
+    css=pathlib.Path(frontend_dir / "style.css").read_text(encoding="utf-8")
+)
 
 data_rdo = pd.DataFrame(fetch_data_from_tablefull("Bot_Atividade"))
 data_monday = pd.DataFrame(get_dataModay(926240878))
@@ -49,52 +56,8 @@ with st.expander("Filtros", expanded=True, icon="⚙️"):
 
     sel_obra = col02.multiselect("Filtrar por Obra (Sigla)", options=df_filtered['SIGLA'].dropna().unique().tolist(), key='sel_obra')
 
-# st.dataframe(data_monday)
+data_rdo = data_rdo[data_rdo['obra'].isin(sel_obra)] if sel_obra else data_rdo
+dados = data_rdo[['obra', 'date_in']].to_dict(orient='records')
 
-# with st.container(border=True):
-#     flex = st.container(horizontal=True, horizontal_alignment="right")
-#     modo_view = flex.segmented_control(
-#         "Modo de Visualização",
-#         label_visibility="hidden",
-#         options=option_view.keys(),
-#         format_func=lambda x: option_view[x],
-#         selection_mode="single",
-#         default=0,
-#     )
-
-#     if modo_view == 0:
-#         with st.container(border=True):
-#             st.header('Modo de visualização selecionado: Agenda')
-#             components.iframe("https://app.constructin.com.br/#/v?t=rzb63r95tmsd0n2awfbme&p=3534", height=500)
-#     else:
-#         st.header('Modo de visualização selecionado:')
-    
-
-frontend_dir = pathlib.Path(__file__).parent.resolve().parent / "components" / "calendar"
-calen = stc.component(
-    "calend",
-    html=pathlib.Path(frontend_dir / "index.html").read_text(encoding="utf-8"),
-    js=pathlib.Path(frontend_dir / "script.js").read_text(encoding="utf-8"),
-    css=pathlib.Path(frontend_dir / "styles.css").read_text(encoding="utf-8")
-)
-
-for obra in df_filtered['SIGLA'].unique().tolist():
-    monday_obra = data_monday[data_monday['SIGLA'] == obra]
-    datas = data_rdo[data_rdo['obra'] == obra]['date_in'].tolist()
-    if datas:
-        with st.expander(obra, expanded=True):
-            tabStatus, tabPBI, tabVISI, tabRDO = st.tabs(['Status RDO', 'Relatório Gerencial', 'VISI', 'RDO + Efetivo'])
-            with tabStatus:
-                datas_dict = {str(data): "check" for data in datas}
-                mes = calen(data=datas_dict, on_clicked_change=lambda: None)
-            with tabPBI:
-                components.iframe(monday_obra['PBI_RG'].iloc[0], height=500)
-            with tabVISI:
-                components.iframe(monday_obra['VISI'].iloc[0], height=500)
-            with tabRDO:
-                components.iframe(monday_obra['PBI_RE'].iloc[0], height=500)
-        
-# with st.container(border=True):
-#     mes = calen(data=datas, on_clicked_change=lambda: None)
-
-# st.write(f"Month selected: {mes}")
+with st.container(border=True):
+    mes = calen(data=dados, on_clicked_change=lambda: None)
