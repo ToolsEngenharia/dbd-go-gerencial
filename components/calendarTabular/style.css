@@ -1,46 +1,27 @@
-:root {
-  --bg-color: #ffffff;
-  --text-main: #2d3748;
-  --text-muted: #a0aec0;
-  --border-color: #e2e8f0;
-  --primary-color: #3182ce;
-  --primary-bg: #ebf8ff;
-  --hover-bg: #f7fafc;
-  
-  --success-bg: #d1fae5;
-  --success-text: #059669;
-  --error-bg: #fee2e2;
-  --error-text: #dc2626;
-  
-
-  --col-width: 45px; 
-  --first-col-width: 150px;
-}
-
 .main {
-  background-color: #ffffff;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-  margin: 0;
+  background-color: #ffffff;
   -webkit-user-select: none;
   user-select: none;
+  margin: 0;
 }
 
 .calendar-container {
-  padding: 20px;
   box-sizing: border-box;
   background: #fff;
+  padding: 5px;
 }
 
 .calendar-header {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  margin-bottom: 20px;
-  padding: 0 14px;
+  margin-bottom: 5px;
+  padding: 0 5px;
 }
 
-.header-left { justify-self: start; display: flex; }
 .header-right { display: flex; gap: 8px; justify-self: end; align-items: center; }
+.header-left { justify-self: start; display: flex; }
 
 .header-title {
   display: flex;
@@ -70,12 +51,13 @@
   transition: all 0.2s ease; padding: 0;
 }
 .nav-btn svg { display: block; }
-.nav-btn:hover { background: var(--hover-bg); border-color: #cbd5e0; }
-
+.nav-btn:hover { background: #f7fafc; border-color: #cbd5e0; }
 .text-btn { width: auto; padding: 0 20px; font-weight: 600; font-size: 0.9rem; }
 
 .table-wrapper {
   overflow-x: auto;
+  overflow-y: auto;
+  max-height: 550px;
   border: 1px solid #e2e8f0;
   border-radius: 12px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.02);
@@ -97,8 +79,15 @@ th, td {
   box-sizing: border-box;
 }
 
-tbody tr:hover {
-  background-color: #f7fafc;
+tbody tr:hover > td {
+  background-color: #e2e8f0 !important;
+}
+
+tbody tr:hover > td.col-fixed {
+  background-color: #e2e8f0 !important;
+  color: var(--st-primary-color) !important;
+  /* border-right: 1px solid #818a96;
+  border-left: 1px solid #818a96; */
 }
 
 th {
@@ -143,20 +132,22 @@ th.col-fixed {
   color: #a0aec0; 
 }
 
-.is-today-col {
-  background-color: rgba(49, 130, 206, 0.15) !important;
+th.is-today-col {
+  background-color: rgba(150, 221, 218) !important;
+  color: #0e938e !important;
 }
 
-th.is-today-col .th-day-num { 
-  color: var(--st-primary-color); 
+td.is-today-col {
+  background-color: rgba(14, 147, 142, 0.12);
 }
 
 .icon-box {
+  display: flex; align-items: center; justify-content: center;
   width: 28px; height: 28px;
   border-radius: 6px;
-  display: flex; align-items: center; justify-content: center;
   margin: 0 auto;
 }
+
 .check .icon-box { background-color: #d1fae5; color: #059669; }
 .x .icon-box {
   background-color: transparent;
