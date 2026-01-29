@@ -86,8 +86,6 @@ tbody tr:hover > td {
 tbody tr:hover > td.col-fixed {
   background-color: #e2e8f0 !important;
   color: var(--st-primary-color) !important;
-  /* border-right: 1px solid #818a96;
-  border-left: 1px solid #818a96; */
 }
 
 th {
@@ -156,3 +154,6 @@ td.is-today-col {
 
 tr:last-child td { border-bottom: none; }
 th:last-child, td:last-child { border-right: none; }
+
+.icon-box.check { background-color: #d1fae5; color: #059669; } /* Verde Esmeralda */
+.icon-box.x { background-color: transparent; color: #fc8181; opacity: 0.4; } /* Vermelho suave */
