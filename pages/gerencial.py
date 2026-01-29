@@ -7,14 +7,22 @@ from data.monday import get_dataModay
 from data.supabase import fetch_data_from_tablefull
 
 frontend_dir = pathlib.Path(__file__).parent.resolve().parent / "components" / "calendarTabular"
+frontend_dir_pbi = pathlib.Path(__file__).parent.resolve().parent / "components" / "calendarTabular_PBI"
 calen = stc.component(
     "calend",
     html=pathlib.Path(frontend_dir / "index.html").read_text(encoding="utf-8"),
     js=pathlib.Path(frontend_dir / "script.js").read_text(encoding="utf-8"),
     css=pathlib.Path(frontend_dir / "style.css").read_text(encoding="utf-8")
 )
+calenPBI = stc.component(
+    "calend_pbi",
+    html=pathlib.Path(frontend_dir_pbi / "index.html").read_text(encoding="utf-8"),
+    js=pathlib.Path(frontend_dir_pbi / "script.js").read_text(encoding="utf-8"),
+    css=pathlib.Path(frontend_dir / "style.css").read_text(encoding="utf-8")
+)
 
 data_rdo = pd.DataFrame(fetch_data_from_tablefull("Bot_Atividade"))
+data_pbi = pd.DataFrame(fetch_data_from_tablefull("Powerbi_reports"))
 data_monday = pd.DataFrame(get_dataModay(926240878))
 data_monday['PRODUTO'] = data_monday['PRODUTO'].str.replace('GERENCIAMENTO DE OBRA ', '', regex=False)
 data_monday = data_monday[~data_monday['RCR'].isin(['', 'DELETED MEMBER', 'MEMBRO EXCLUÍDO'])]
@@ -59,5 +67,10 @@ with st.expander("Filtros", expanded=True, icon="⚙️"):
 data_rdo = data_rdo[data_rdo['obra'].isin(sel_obra)] if sel_obra else data_rdo
 dados = data_rdo[['obra', 'date_in']].to_dict(orient='records')
 
+dataset_pbi = data_pbi[data_pbi['obra'].isin(sel_obra)] if sel_obra else data_pbi
+dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
+
 with st.container(border=True):
     mes = calen(data=dados, on_clicked_change=lambda: None)
+with st.container(border=True):
+    mes_pbi = calenPBI(data=dados_pbi, on_clicked_change=lambda: None)
