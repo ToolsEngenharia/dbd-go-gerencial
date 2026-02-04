@@ -8,7 +8,7 @@ def get_supabase_client() -> Client:
     supabase: Client = create_client(url, key)
     return supabase
 
-@st.cache_data
+@st.cache_data(ttl=5400)
 def fetch_data_from_tablefull(table_name: str) -> list[dict]:
     supabase = get_supabase_client()
     results: list[dict] = []
@@ -34,6 +34,7 @@ def fetch_data_from_tablefull(table_name: str) -> list[dict]:
 
     return results
 
+@st.cache_data(ttl=5400)
 def fetch_data_from_table(table_name: str) -> list[dict]:
     supabase = get_supabase_client()
     data = supabase.table(table_name).select('*').order('id', desc=True).execute()
