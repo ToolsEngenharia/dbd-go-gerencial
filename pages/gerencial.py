@@ -109,13 +109,27 @@ dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
 
 with st.container(border=True):
     st.write('STATUS DAS ATIVIDADES - RDO')
-    col01, col02, col03, col04 = st.columns(4)
-    with col01:
-        col01.metric('TOTAL OBRAS', value=len(df_filtered['SIGLA'].unique()), border=True)
-            
     with st.container(border=True):
         mes = calen(data=dados, on_clicked_change=lambda: None)
-    st.write(mes)
+
+    clicked = (mes.get('clicked') if isinstance(mes, dict) else None) or pd.to_datetime('today').strftime('%m-%Y')
+    data_selecionada = pd.to_datetime(clicked, format='%m-%Y')
+    col01, col02, col03 = st.columns(3)
+
+    with col01:
+        col01.metric('TOTAL OBRAS', value=len(df_filtered['SIGLA'].unique()), border=True)
+
+    with col02:
+        mes_period = pd.to_datetime(clicked, format='%m-%Y').to_period('M')
+        total_obras_com_atividades = data_rdo[
+            pd.to_datetime(data_rdo['date_in']).dt.to_period('M') == mes_period
+        ]['obra'].nunique()
+        col02.metric('TOTAL ATIVIDADES (MÊS ATUAL)', value=total_obras_com_atividades, border=True)
+        
+    with col03:
+        col03.metric(
+            'PERCENTUAL DE OBRAS COM ATIVIDADES (MÊS ATUAL)',value=f"{(total_obras_com_atividades / len(df_filtered['SIGLA'].unique()) * 100):.2f} %", border=True
+        )
 with st.container(border=True):
     st.write('RELATÓRIO DE GERENCIAL DE OBRAS - POWER BI')
     with st.container(border=True):
