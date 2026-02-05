@@ -27,7 +27,15 @@ def transformar_dados(input_data):
 			"SIGLA": item.get('name', '').split('-')[0].strip(),
             "OBRA": item.get('name', ''),
             "FASE": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'status6'), ''),
-            "RCR": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'dup__of_equipe'), ''),
+            "RCR": (
+                ', '.join(
+                    e.split('@', 1)[0].strip().replace('.', ' ').title()
+                    for e in (
+                        next((c['text'] for c in item.get('column_values', []) if c['id'] == 'dup__of_equipe'), '') or ''
+                    ).split(',')
+                    if e.strip() and e.strip().upper() not in ['DELETED MEMBER', 'MEMBRO EXCLUÍDO']
+                ) or None
+            ),
             "PRODUTO": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'produto'), ''),
             "LOCAL": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'location'), ''),
             "CIDADE": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'local'), ''),
@@ -42,7 +50,7 @@ def transformar_dados(input_data):
             "PBI_RA": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'link_mkmw93z2'), ''),
         }
         resultado.append(novo_item)
-    resultado = [item for item in resultado if item['PRODUTO'] and 'PROJETO' not in item['PRODUTO'].upper() and 'GESTÃO' not in item['PRODUTO'].upper()]
+    resultado = [item for item in resultado if item['PRODUTO'] and 'PROJETO' not in item['PRODUTO'].upper() and 'GESTÃO' not in item['PRODUTO'].upper() and 'Finalizado' not in item['FASE'] and 'Paralisado' not in item['FASE']]
     return resultado
 
     #selecionar apenas os itens que possuem o produto GERENCIAMENTO RESIDENCIAL e que esta na fase de Fase Obra
