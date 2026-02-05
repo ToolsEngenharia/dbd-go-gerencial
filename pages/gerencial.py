@@ -47,30 +47,76 @@ with col3:
 
 st.write('####')
 with st.expander("Filtros", expanded=True, icon="⚙️"):
+    df_filtered = data_monday[['SIGLA', 'PRODUTO', 'RCR', 'CIDADE']].copy()
+    df_filtered = df_filtered.assign(RCR=df_filtered['RCR'].str.split(',')).explode('RCR')
+    df_filtered['RCR'].fillna('SEM RCR', inplace=True)
     col01, col02, col03, col04 = st.columns(4)
-    df_filtered = data_monday.copy()
 
-    sel_prod = col01.pills('Selecione a Produto', options=prod, selection_mode='multi', key="sel_fase", default=prod[0])
+    prod_opts = sorted(df_filtered['PRODUTO'].dropna().unique().tolist())
+    default_prod = ['RESIDENCIAL'] if 'RESIDENCIAL' in prod_opts else (prod_opts if prod_opts else None)
+    sel_prod = col01.pills(
+        'Selecione a Produto',
+        options=prod_opts,
+        selection_mode='multi',
+        key="sel_fase",
+        default=default_prod
+    )
     if sel_prod:
         df_filtered = df_filtered[df_filtered['PRODUTO'].isin(sel_prod)]
 
-    sel_rcr = col03.multiselect('Selecione o RCR', options=df_filtered['RCR'].dropna().unique().tolist(), key='sel_rcr')
+    # primeiro filtramos por RCR para que as opções de Sigla reflitam a seleção do RCR
+    sel_rcr = col03.multiselect(
+        'Selecione o RCR',
+        options=sorted(df_filtered['RCR'].dropna().unique().tolist()),
+        key='sel_rcr'
+    )
     if sel_rcr:
         df_filtered = df_filtered[df_filtered['RCR'].isin(sel_rcr)]
 
-    sel_cid = col04.multiselect('Selecione a Cidade', options=df_filtered['CIDADE'].dropna().unique().tolist(), key='sel_cid')
+    sel_obra = col02.multiselect(
+        "Filtrar por Obra (Sigla)",
+        options=(
+            sorted(
+                [
+                    o for o in df_filtered['SIGLA'].dropna().unique().tolist()
+                    if o in set(data_rdo['obra'].dropna().unique()).union(set(data_pbi['sigla'].dropna().unique()))
+                ]
+            )
+            if any(
+                o in set(data_rdo['obra'].dropna().unique()).union(set(data_pbi['sigla'].dropna().unique()))
+                for o in df_filtered['SIGLA'].dropna().unique().tolist()
+            )
+            else sorted(df_filtered['SIGLA'].dropna().unique().tolist())
+        ),
+        key='sel_obra'
+    )
+    if sel_obra:
+        df_filtered = df_filtered[df_filtered['SIGLA'].isin(sel_obra)]
+
+    sel_cid = col04.multiselect(
+        'Selecione a Cidade',
+        options=sorted(df_filtered['CIDADE'].dropna().unique().tolist()),
+        key='sel_cid'
+    )
     if sel_cid:
         df_filtered = df_filtered[df_filtered['CIDADE'].isin(sel_cid)]
 
-    sel_obra = col02.multiselect("Filtrar por Obra (Sigla)", options=df_filtered['SIGLA'].dropna().unique().tolist(), key='sel_obra')
-
-data_rdo = data_rdo[data_rdo['obra'].isin(sel_obra)] if sel_obra else data_rdo
+data_rdo = data_rdo[data_rdo['obra'].isin(df_filtered['SIGLA'].unique())]
 dados = data_rdo[['obra', 'date_in']].to_dict(orient='records')
 
-dataset_pbi = data_pbi[data_pbi['obra'].isin(sel_obra)] if sel_obra else data_pbi
+dataset_pbi = data_pbi[data_pbi['sigla'].isin(df_filtered['SIGLA'].unique())]
 dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
 
 with st.container(border=True):
-    mes = calen(data=dados, on_clicked_change=lambda: None)
+    st.write('STATUS DAS ATIVIDADES - RDO')
+    col01, col02, col03, col04 = st.columns(4)
+    with col01:
+        col01.metric('TOTAL OBRAS', value=len(df_filtered['SIGLA'].unique()), border=True)
+            
+    with st.container(border=True):
+        mes = calen(data=dados, on_clicked_change=lambda: None)
+    st.write(mes)
 with st.container(border=True):
-    mes_pbi = calenPBI(data=dados_pbi, on_clicked_change=lambda: None)
+    st.write('RELATÓRIO DE GERENCIAL DE OBRAS - POWER BI')
+    with st.container(border=True):
+        mes_pbi = calenPBI(data=dados_pbi, on_clicked_change=lambda: None)
