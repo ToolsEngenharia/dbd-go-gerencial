@@ -125,7 +125,7 @@ with st.container(border=True):
             pd.to_datetime(data_rdo['date_in']).dt.to_period('M') == mes_period
         ]['obra'].nunique()
         col02.metric('TOTAL ATIVIDADES (MÊS ATUAL)', value=total_obras_com_atividades, border=True)
-        
+
     with col03:
         col03.metric(
             'PERCENTUAL DE OBRAS COM ATIVIDADES (MÊS ATUAL)',value=f"{(total_obras_com_atividades / len(df_filtered['SIGLA'].unique()) * 100):.2f} %", border=True
@@ -133,4 +133,19 @@ with st.container(border=True):
 with st.container(border=True):
     st.write('RELATÓRIO DE GERENCIAL DE OBRAS - POWER BI')
     with st.container(border=True):
-        mes_pbi = calenPBI(data=dados_pbi, on_clicked_change=lambda: None)
+        ano_pbi = calenPBI(data=dados_pbi, on_clicked_change=lambda: None)
+    clicked_pbi = (ano_pbi.get('clicked') if isinstance(ano_pbi, dict) else None) or pd.to_datetime('today').strftime('%Y')
+    data_selecionada_pbi = pd.to_datetime(clicked_pbi, format='%Y')
+    col01, col02, col03 = st.columns(3)
+    with col01:
+        col01.metric('TOTAL OBRAS', value=len(df_filtered['SIGLA'].unique()), border=True)
+    with col02:
+        ano_period = pd.to_datetime(clicked_pbi, format='%Y').to_period('Y')
+        total_obras_com_relatorio = dataset_pbi[
+            pd.to_datetime(dataset_pbi['data_relatorio']).dt.to_period('Y') == ano_period
+        ]['sigla'].nunique()
+        col02.metric('TOTAL OBRAS COM RELATÓRIO (ANO ATUAL)', value=total_obras_com_relatorio, border=True)
+    with col03:
+        col03.metric(
+            'PERCENTUAL DE OBRAS COM RELATÓRIO (ANO ATUAL)',value=f"{(total_obras_com_relatorio / len(df_filtered['SIGLA'].unique()) * 100):.2f} %", border=True
+        )
