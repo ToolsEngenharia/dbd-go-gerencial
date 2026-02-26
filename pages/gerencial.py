@@ -23,6 +23,8 @@ calenPBI = stc.component(
 
 data_rdo = pd.DataFrame(fetch_data_from_tablefull("Bot_Atividade"))
 data_pbi = pd.DataFrame(fetch_data_from_tablefull("Powerbi_reports"))
+data_gerencial = pd.DataFrame(fetch_data_from_tablefull("Map_PBI"))
+
 data_monday = pd.DataFrame(get_dataModay(926240878))
 data_monday['PRODUTO'] = data_monday['PRODUTO'].str.replace('GERENCIAMENTO DE OBRA ', '', regex=False)
 data_monday = data_monday[~data_monday['RCR'].isin(['', 'DELETED MEMBER', 'MEMBRO EXCLUÍDO'])]
@@ -64,10 +66,9 @@ with st.expander("Filtros", expanded=True, icon="⚙️"):
     if sel_prod:
         df_filtered = df_filtered[df_filtered['PRODUTO'].isin(sel_prod)]
 
-    # primeiro filtramos por RCR para que as opções de Sigla reflitam a seleção do RCR
     sel_rcr = col03.multiselect(
         'Selecione o RCR',
-        options=sorted(df_filtered['RCR'].dropna().unique().tolist()),
+        options=sorted(df_filtered['RCR'].str.strip().dropna().unique().tolist()),
         key='sel_rcr'
     )
     if sel_rcr:
@@ -107,8 +108,45 @@ dados = data_rdo[['obra', 'date_in']].to_dict(orient='records')
 dataset_pbi = data_pbi[data_pbi['sigla'].isin(df_filtered['SIGLA'].unique())]
 dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
 
-with st.container(border=True):
-    st.write('STATUS DAS ATIVIDADES - RDO')
+data_gerencial = data_gerencial[data_gerencial['sigla'].isin(df_filtered['SIGLA'].unique())]
+# remove colunas desnecessárias id, created_at
+data_gerencial = data_gerencial.drop(columns=['id', 'created_at'], errors='ignore')
+data_gerencial[['desvio_porcentual', 'curva_base', 'realizado_porcentual']] = data_gerencial[['desvio_porcentual', 'curva_base', 'realizado_porcentual']].apply(pd.to_numeric, errors='coerce') * 100
+
+config = {
+    'sigla': st.column_config.TextColumn('Obra (Sigla)'),
+    'periodo_custo': st.column_config.TextColumn('Período Custo'),
+    'custo_obra': st.column_config.NumberColumn('Custo Obra', format="R$ %.2f"),
+    'change_order': st.column_config.NumberColumn('Change Order', format="R$ %.2f"),
+    'custo_total': st.column_config.NumberColumn('Custo Total', format="R$ %.2f"),
+    'tendencia': st.column_config.NumberColumn('Tendência', format="R$ %.2f"),
+    'desvio_porcentual': st.column_config.NumberColumn('Desvio %', format='%.2f%%'),
+    'taxa_paga': st.column_config.NumberColumn('Taxa Paga', format="R$ %.2f"),
+    'taxa_paga_acumulada': st.column_config.NumberColumn('Taxa Paga Acumulada', format="R$ %.2f"),
+    'taxa_liberada': st.column_config.NumberColumn('Taxa Liberada', format="R$ %.2f"),
+    'taxa_liberada_acumulada': st.column_config.NumberColumn('Taxa Liberada Acumulada', format="R$ %.2f"),
+    'curva_base': st.column_config.NumberColumn('Curva Base', format='%.2f%%'),
+    'realizado_porcentual': st.column_config.NumberColumn('Realizado %', format='%.2f%%'),
+    'atraso_avanco': st.column_config.NumberColumn('Atraso Avanço', format="%d dias"),
+    'contratado_direto': st.column_config.NumberColumn('Contratado Direto', format="R$ %.2f"),
+    'contratado_indireto': st.column_config.NumberColumn('Contratado Indireto', format="R$ %.2f"),
+    'contratado_total': st.column_config.NumberColumn('Contratado Total', format="R$ %.2f"),
+    'economia_total_direto': st.column_config.NumberColumn('Economia Total Direto', format="R$ %.2f"),
+    'economia_total_indireto': st.column_config.NumberColumn('Economia Total Indireto', format="R$ %.2f"),
+    'economia_total': st.column_config.NumberColumn('Economia Total', format="R$ %.2f"),
+    'saving_direto': st.column_config.NumberColumn('Saving Direto', format="R$ %.2f"),
+    'saving_indireto': st.column_config.NumberColumn('Saving Indireto', format="R$ %.2f"),
+    'saving_total': st.column_config.NumberColumn('Saving Total', format="R$ %.2f"),
+    'saving_pago_direto': st.column_config.NumberColumn('Saving Pago Direto', format="R$ %.2f"),
+    'saving_pago_indireto': st.column_config.NumberColumn('Saving Pago Indireto', format="R$ %.2f"),
+    'saving_pago_total': st.column_config.NumberColumn('Saving Pago Total', format="R$ %.2f"),
+    'periodo_avanco': st.column_config.TextColumn('Período Avanço')
+}
+
+with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
+    st.data_editor(data_gerencial, hide_index=True, column_config=config, use_container_width=True, )
+
+with st.expander(label='STATUS DAS ATIVIDADES - RDO', expanded=True, icon="📊"):
     with st.container(border=True):
         mes = calen(data=dados, on_clicked_change=lambda: None)
 
@@ -130,8 +168,7 @@ with st.container(border=True):
         col03.metric(
             'PERCENTUAL DE OBRAS COM ATIVIDADES (MÊS ATUAL)',value=f"{(total_obras_com_atividades / len(df_filtered['SIGLA'].unique()) * 100):.2f} %", border=True
         )
-with st.container(border=True):
-    st.write('RELATÓRIO DE GERENCIAL DE OBRAS - POWER BI')
+with st.expander(label='RELATÓRIO DE GERENCIAL DE OBRAS - POWER BI', expanded=True, icon="📊"):
     with st.container(border=True):
         ano_pbi = calenPBI(data=dados_pbi, on_clicked_change=lambda: None)
     clicked_pbi = (ano_pbi.get('clicked') if isinstance(ano_pbi, dict) else None) or pd.to_datetime('today').strftime('%Y')
