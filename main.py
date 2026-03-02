@@ -1,6 +1,6 @@
 import streamlit as st
 
-st.set_page_config(layout='wide', initial_sidebar_state='collapsed')
+st.set_page_config(layout='wide', initial_sidebar_state='collapsed', page_title='Tools GO - Gerencial', page_icon='📊')
 
 pg = st.navigation([
     st.Page('pages/gerencial.py', title='Gerencial'),
