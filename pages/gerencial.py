@@ -27,8 +27,8 @@ def style_prediction(v):
 data_rdo = pd.DataFrame(fetch_data_from_tablefull("Bot_Atividade"))
 data_pbi = pd.DataFrame(fetch_data_from_tablefull("Powerbi_reports"))
 data_gerencial = pd.DataFrame(fetch_data_from_tablefull("Map_PBI"))
-
 data_monday = pd.DataFrame(get_dataModay(926240878))
+
 data_monday['PRODUTO'] = data_monday['PRODUTO'].str.replace('GERENCIAMENTO DE OBRA ', '', regex=False)
 data_monday = data_monday[~data_monday['RCR'].isin(['', 'DELETED MEMBER', 'MEMBRO EXCLUÍDO'])]
 
@@ -64,21 +64,25 @@ with st.expander("Filtros", expanded=True, icon="⚙️"):
         options=prod_opts,
         selection_mode='multi',
         key="sel_fase",
-        default=default_prod
+        default=default_prod,
+        help="Selecione os produtos para filtrar. Por padrão, 'RESIDENCIAL' está selecionado se disponível.",
     )
     if sel_prod:
         df_filtered = df_filtered[df_filtered['PRODUTO'].isin(sel_prod)]
 
     sel_rcr = col03.multiselect(
         'Selecione o RCR',
+        placeholder="Selecione os RCRs para filtrar",
         options=sorted(df_filtered['RCR'].str.strip().dropna().unique().tolist()),
-        key='sel_rcr'
+        key='sel_rcr',
+        help="Selecione os RCRs para filtrar. Como padrão, nenhum RCR está selecionado para permitir a visualização de todas as obras, incluindo aquelas sem RCR atribuído."
     )
     if sel_rcr:
         df_filtered = df_filtered[df_filtered['RCR'].isin(sel_rcr)]
 
     sel_obra = col02.multiselect(
         "Filtrar por Obra (Sigla)",
+        placeholder="Selecione as obras para filtrar",
         options=(
             sorted(
                 [
@@ -92,7 +96,8 @@ with st.expander("Filtros", expanded=True, icon="⚙️"):
             )
             else sorted(df_filtered['SIGLA'].dropna().unique().tolist())
         ),
-        key='sel_obra'
+        key='sel_obra',
+        help="Selecione as obras para filtrar. A lista de obras é filtrada para incluir apenas aquelas que possuem dados relacionados"
     )
     if sel_obra:
         df_filtered = df_filtered[df_filtered['SIGLA'].isin(sel_obra)]
@@ -100,7 +105,9 @@ with st.expander("Filtros", expanded=True, icon="⚙️"):
     sel_cid = col04.multiselect(
         'Selecione a Cidade',
         options=sorted(df_filtered['CIDADE'].dropna().unique().tolist()),
-        key='sel_cid'
+        key='sel_cid',
+        placeholder="Selecione as cidades para filtrar",
+        help="Selecione as cidades para filtrar. A lista de cidades é baseada nos dados disponíveis no conjunto de dados filtrado."
     )
     if sel_cid:
         df_filtered = df_filtered[df_filtered['CIDADE'].isin(sel_cid)]
@@ -112,10 +119,8 @@ dataset_pbi = data_pbi[data_pbi['sigla'].isin(df_filtered['SIGLA'].unique())]
 dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
 
 data_gerencial = data_gerencial[data_gerencial['sigla'].isin(df_filtered['SIGLA'].unique())]
-# remove colunas desnecessárias id, created_at
 # data_gerencial = data_gerencial.drop(columns=['id'], errors='ignore')
 data_gerencial[['desvio_porcentual', 'curva_base', 'realizado_porcentual']] = data_gerencial[['desvio_porcentual', 'curva_base', 'realizado_porcentual']].apply(pd.to_numeric, errors='coerce') * 100
-# formatar colunas do tipo data para o formato YY-MM
 data_gerencial['created_at'] = pd.to_datetime(data_gerencial['created_at'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_custo'] = pd.to_datetime(data_gerencial['periodo_custo'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_avanco'] = pd.to_datetime(data_gerencial['periodo_avanco'], errors='coerce').dt.strftime('%Y-%m')
@@ -148,7 +153,10 @@ config = {
     'saving_pago_direto': st.column_config.NumberColumn('Saving Pago Direto', format="R$ %.2f"),
     'saving_pago_indireto': st.column_config.NumberColumn('Saving Pago Indireto', format="R$ %.2f"),
     'saving_pago_total': st.column_config.NumberColumn('Saving Pago Total', format="R$ %.2f"),
-    'periodo_avanco': st.column_config.TextColumn('Período Avanço')
+    'periodo_avanco': st.column_config.TextColumn('Período Avanço'),
+    'HUB': st.column_config.LinkColumn('HUB', display_text="🔗", width=10),
+    'VISI': st.column_config.LinkColumn('VISI', display_text="🔗", width=10),
+    'PBI_RG': st.column_config.LinkColumn('Rel. Gerencial', display_text="🔗", width=50)
 }
 
 with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
@@ -162,11 +170,12 @@ with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
     )
 
     option = st.session_state.get('option_view', 'Geral')
+    data_gerencial = data_gerencial.merge(data_monday[['SIGLA', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA']].drop_duplicates(), how='left', left_on='sigla', right_on='SIGLA').drop(columns=['SIGLA'], errors='ignore')
     
     cols_map = {
-        'Geral': ['sigla', 'created_at', 'periodo_custo', 'custo_total', 'desvio_porcentual', 'curva_base', 'realizado_porcentual', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total'],
-        'Financeiro': ['sigla', 'created_at', 'periodo_custo', 'custo_obra', 'change_order', 'custo_total', 'tendencia', 'desvio_porcentual'],
-        'Físico': ['sigla', 'created_at', 'periodo_avanco', 'curva_base', 'realizado_porcentual', 'atraso_avanco'],
+        'Geral': ['sigla', 'created_at', 'periodo_custo', 'custo_total', 'desvio_porcentual', 'curva_base', 'realizado_porcentual', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total', 'HUB', 'VISI', 'PBI_RG'],
+        'Financeiro': ['sigla', 'periodo_custo', 'custo_obra', 'change_order', 'custo_total', 'tendencia', 'desvio_porcentual'],
+        'Físico': ['sigla', 'periodo_avanco', 'curva_base', 'realizado_porcentual', 'atraso_avanco'],
         'Contratações': ['sigla', 'created_at', 'contratado_direto', 'contratado_indireto', 'contratado_total'],
         'Economias e Savings': ['sigla', 'created_at', 'economia_total_direto', 'economia_total_indireto', 'economia_total', 'saving_direto', 'saving_indireto', 'saving_total', 'saving_pago_direto', 'saving_pago_indireto', 'saving_pago_total']
     }
@@ -182,7 +191,6 @@ with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
     )
 
     st.dataframe(df_styled, column_config=config, use_container_width=True, hide_index=True)
-    
 
 with st.expander(label='STATUS DAS ATIVIDADES - RDO', expanded=True, icon="📊"):
     with st.container(border=True):
