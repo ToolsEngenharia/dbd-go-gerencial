@@ -18,7 +18,7 @@ calenPBI = stc.component(
     "calend_pbi",
     html=pathlib.Path(frontend_dir_pbi / "index.html").read_text(encoding="utf-8"),
     js=pathlib.Path(frontend_dir_pbi / "script.js").read_text(encoding="utf-8"),
-    css=pathlib.Path(frontend_dir_pbi / "style.css").read_text(encoding="utf-8")
+    css=pathlib.Path(frontend_dir / "style.css").read_text(encoding="utf-8")
 )
 
 def style_prediction(v):
