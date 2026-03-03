@@ -23,31 +23,34 @@ def transformar_dados(input_data):
     resultado = []
 
     for item in items:
+        def get_column_value(column_id):
+            return next((c['text'] for c in item.get('column_values', []) if c['id'] == column_id), '')
+        
+        def extract_hub(column_id):
+            text = get_column_value(column_id)
+            return text.split(' - ')[-1] if ' - ' in text else text
+        
         novo_item = {
-			"SIGLA": item.get('name', '').split('-')[0].strip(),
+            "SIGLA": item.get('name', '').split('-')[0].strip(),
             "OBRA": item.get('name', ''),
-            "FASE": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'status6'), ''),
-            "RCR": (
-                ', '.join(
-                    e.split('@', 1)[0].strip().replace('.', ' ').title()
-                    for e in (
-                        next((c['text'] for c in item.get('column_values', []) if c['id'] == 'dup__of_equipe'), '') or ''
-                    ).split(',')
+            "FASE": get_column_value('status6'),
+            "RCR": ', '.join(
+                e.split('@', 1)[0].strip().replace('.', ' ').title()
+                    for e in get_column_value('dup__of_equipe').split(',')
                     if e.strip() and e.strip().upper() not in ['DELETED MEMBER', 'MEMBRO EXCLUÍDO']
-                ) or None
-            ),
-            "PRODUTO": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'produto'), ''),
-            "LOCAL": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'location'), ''),
-            "CIDADE": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'local'), ''),
-            "AREA": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'numeric_mksm5mps'), ''),
-            "CONSTRUTORA": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'texto1'), ''),
-            "ARQUITETURA": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'texto4'), ''),
-            "CLIENTE": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'dup__of_produto'), ''),
-            "HUB": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'link1'), ''),
-            "VISI": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'link2'), ''),
-            "PBI_RG": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'link_mkskfawa'), ''),
-            "PBI_RE": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'link_mkmw87fc'), ''),
-            "PBI_RA": next((c['text'] for c in item.get('column_values', []) if c['id'] == 'link_mkmw93z2'), ''),
+                ) or None,
+            "PRODUTO": get_column_value('produto'),
+            "LOCAL": get_column_value('location'),
+            "CIDADE": get_column_value('local'),
+            "AREA": get_column_value('numeric_mksm5mps'),
+            "CONSTRUTORA": get_column_value('texto1'),
+            "ARQUITETURA": get_column_value('texto4'),
+            "CLIENTE": get_column_value('dup__of_produto'),
+            "HUB": extract_hub('link1'),
+            "VISI": extract_hub('link2'),
+            "PBI_RG": extract_hub('link_mkskfawa'),
+            "PBI_RE": extract_hub('link_mkmw87fc'),
+            "PBI_RA": extract_hub('link_mkmw93z2'),
         }
         resultado.append(novo_item)
     resultado = [item for item in resultado if item['PRODUTO'] and 'PROJETO' not in item['PRODUTO'].upper() and 'GESTÃO' not in item['PRODUTO'].upper() and 'Finalizado' not in item['FASE'] and 'Paralisado' not in item['FASE']]
