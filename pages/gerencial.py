@@ -18,8 +18,11 @@ calenPBI = stc.component(
     "calend_pbi",
     html=pathlib.Path(frontend_dir_pbi / "index.html").read_text(encoding="utf-8"),
     js=pathlib.Path(frontend_dir_pbi / "script.js").read_text(encoding="utf-8"),
-    css=pathlib.Path(frontend_dir / "style.css").read_text(encoding="utf-8")
+    css=pathlib.Path(frontend_dir_pbi / "style.css").read_text(encoding="utf-8")
 )
+
+def style_prediction(v):
+    return 'color: #d10000; font-weight: bold;' if v > 0 else ('color: #008000; font-weight: bold;' if v < 0 else 'color: #808080;')
 
 data_rdo = pd.DataFrame(fetch_data_from_tablefull("Bot_Atividade"))
 data_pbi = pd.DataFrame(fetch_data_from_tablefull("Powerbi_reports"))
@@ -110,10 +113,15 @@ dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
 
 data_gerencial = data_gerencial[data_gerencial['sigla'].isin(df_filtered['SIGLA'].unique())]
 # remove colunas desnecessárias id, created_at
-data_gerencial = data_gerencial.drop(columns=['id', 'created_at'], errors='ignore')
+# data_gerencial = data_gerencial.drop(columns=['id'], errors='ignore')
 data_gerencial[['desvio_porcentual', 'curva_base', 'realizado_porcentual']] = data_gerencial[['desvio_porcentual', 'curva_base', 'realizado_porcentual']].apply(pd.to_numeric, errors='coerce') * 100
+# formatar colunas do tipo data para o formato YY-MM
+data_gerencial['created_at'] = pd.to_datetime(data_gerencial['created_at'], errors='coerce').dt.strftime('%Y-%m')
+data_gerencial['periodo_custo'] = pd.to_datetime(data_gerencial['periodo_custo'], errors='coerce').dt.strftime('%Y-%m')
+data_gerencial['periodo_avanco'] = pd.to_datetime(data_gerencial['periodo_avanco'], errors='coerce').dt.strftime('%Y-%m')
 
 config = {
+    'created_at': st.column_config.TextColumn('Período'),
     'sigla': st.column_config.TextColumn('Obra (Sigla)'),
     'periodo_custo': st.column_config.TextColumn('Período Custo'),
     'custo_obra': st.column_config.NumberColumn('Custo Obra', format="R$ %.2f"),
@@ -127,7 +135,7 @@ config = {
     'taxa_liberada_acumulada': st.column_config.NumberColumn('Taxa Liberada Acumulada', format="R$ %.2f"),
     'curva_base': st.column_config.NumberColumn('Curva Base', format='%.2f%%'),
     'realizado_porcentual': st.column_config.NumberColumn('Realizado %', format='%.2f%%'),
-    'atraso_avanco': st.column_config.NumberColumn('Atraso Avanço', format="%d dias"),
+    'atraso_avanco': st.column_config.TextColumn('Atraso Avanço'),
     'contratado_direto': st.column_config.NumberColumn('Contratado Direto', format="R$ %.2f"),
     'contratado_indireto': st.column_config.NumberColumn('Contratado Indireto', format="R$ %.2f"),
     'contratado_total': st.column_config.NumberColumn('Contratado Total', format="R$ %.2f"),
@@ -144,7 +152,37 @@ config = {
 }
 
 with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
-    st.data_editor(data_gerencial, hide_index=True, column_config=config, use_container_width=True, )
+    layout = st.container(horizontal=True, horizontal_alignment='right')
+    layout.segmented_control(
+        label="Selecione a visualização",
+        label_visibility='hidden',
+        options=['Geral', 'Financeiro', 'Físico', 'Contratações', 'Economias e Savings'],
+        key='option_view',
+        default='Geral'
+    )
+
+    option = st.session_state.get('option_view', 'Geral')
+    
+    cols_map = {
+        'Geral': ['sigla', 'created_at', 'periodo_custo', 'custo_total', 'desvio_porcentual', 'curva_base', 'realizado_porcentual', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total'],
+        'Financeiro': ['sigla', 'created_at', 'periodo_custo', 'custo_obra', 'change_order', 'custo_total', 'tendencia', 'desvio_porcentual'],
+        'Físico': ['sigla', 'created_at', 'periodo_avanco', 'curva_base', 'realizado_porcentual', 'atraso_avanco'],
+        'Contratações': ['sigla', 'created_at', 'contratado_direto', 'contratado_indireto', 'contratado_total'],
+        'Economias e Savings': ['sigla', 'created_at', 'economia_total_direto', 'economia_total_indireto', 'economia_total', 'saving_direto', 'saving_indireto', 'saving_total', 'saving_pago_direto', 'saving_pago_indireto', 'saving_pago_total']
+    }
+    
+    cols_to_show = cols_map.get(option, data_gerencial.columns.tolist())
+    df_display = data_gerencial[cols_to_show].copy()
+    colunas_para_estilizar = [c for c in ['desvio_porcentual', 'atraso_avanco'] if c in cols_to_show]
+
+    df_styled = (
+        df_display.style.applymap(style_prediction, subset=colunas_para_estilizar)
+        if colunas_para_estilizar
+        else df_display
+    )
+
+    st.dataframe(df_styled, column_config=config, use_container_width=True, hide_index=True)
+    
 
 with st.expander(label='STATUS DAS ATIVIDADES - RDO', expanded=True, icon="📊"):
     with st.container(border=True):
