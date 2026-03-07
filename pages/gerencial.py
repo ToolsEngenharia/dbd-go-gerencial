@@ -121,22 +121,23 @@ dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
 data_gerencial = data_gerencial[data_gerencial['sigla'].isin(df_filtered['SIGLA'].unique())]
 # data_gerencial = data_gerencial.drop(columns=['id'], errors='ignore')
 data_gerencial[['desvio_porcentual', 'curva_base', 'realizado_porcentual']] = data_gerencial[['desvio_porcentual', 'curva_base', 'realizado_porcentual']].apply(pd.to_numeric, errors='coerce') * 100
-data_gerencial['created_at'] = pd.to_datetime(data_gerencial['created_at'], errors='coerce').dt.strftime('%Y-%m')
+data_gerencial['data_atualizacao'] = pd.to_datetime(data_gerencial['data_atualizacao'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_custo'] = pd.to_datetime(data_gerencial['periodo_custo'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_avanco'] = pd.to_datetime(data_gerencial['periodo_avanco'], errors='coerce').dt.strftime('%Y-%m')
 
 config = {
-    'created_at': st.column_config.TextColumn('Período'),
+    'data_atualizacao': st.column_config.TextColumn('Período'),
     'sigla': st.column_config.TextColumn('Obra (Sigla)'),
     'periodo_custo': st.column_config.TextColumn('Período Custo'),
     'custo_obra': st.column_config.NumberColumn('Custo Obra', format="R$ %.2f"),
     'change_order': st.column_config.NumberColumn('Change Order', format="R$ %.2f"),
     'custo_total': st.column_config.NumberColumn('Custo Total', format="R$ %.2f"),
     'tendencia': st.column_config.NumberColumn('Tendência', format="R$ %.2f"),
+    'gasto_competencia_acumulado': st.column_config.NumberColumn('Gasto Acumulado', format="R$ %.2f"),
+    'porcentual_consumido': st.column_config.NumberColumn('Consumido %', format='%.2f%%'),
+
     'desvio_porcentual': st.column_config.NumberColumn('Desvio %', format='%.2f%%'),
-    'taxa_paga': st.column_config.NumberColumn('Taxa Paga', format="R$ %.2f"),
     'taxa_paga_acumulada': st.column_config.NumberColumn('Taxa Paga Acumulada', format="R$ %.2f"),
-    'taxa_liberada': st.column_config.NumberColumn('Taxa Liberada', format="R$ %.2f"),
     'taxa_liberada_acumulada': st.column_config.NumberColumn('Taxa Liberada Acumulada', format="R$ %.2f"),
     'curva_base': st.column_config.NumberColumn('Curva Base', format='%.2f%%'),
     'realizado_porcentual': st.column_config.NumberColumn('Realizado %', format='%.2f%%'),
@@ -153,36 +154,41 @@ config = {
     'saving_pago_direto': st.column_config.NumberColumn('Saving Pago Direto', format="R$ %.2f"),
     'saving_pago_indireto': st.column_config.NumberColumn('Saving Pago Indireto', format="R$ %.2f"),
     'saving_pago_total': st.column_config.NumberColumn('Saving Pago Total', format="R$ %.2f"),
+    'saldo_saving': st.column_config.NumberColumn('Saldo Saving', format="R$ %.2f"),
     'periodo_avanco': st.column_config.TextColumn('Período Avanço'),
     'HUB': st.column_config.LinkColumn('HUB', display_text="🔗", width=10),
     'VISI': st.column_config.LinkColumn('VISI', display_text="🔗", width=10),
-    'PBI_RG': st.column_config.LinkColumn('Rel. Gerencial', display_text="🔗", width=50)
+    'PBI_RG': st.column_config.LinkColumn('Rel. Gerencial', display_text="🔗", width=50),
+    'PBI_RE': st.column_config.LinkColumn('RDO + Efetivo', display_text="🔗", width=50),
+    'PBI_RA': st.column_config.LinkColumn('Apontamentos', display_text="🔗", width=50),
+    'PBI_RQ': st.column_config.LinkColumn('Qualidade', display_text="🔗", width=50),
 }
 
 with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
-    layout = st.container(horizontal=True, horizontal_alignment='right')
+    layout = st.container(horizontal=True, horizontal_alignment='center')
     layout.segmented_control(
         label="Selecione a visualização",
         label_visibility='hidden',
-        options=['Geral', 'Financeiro', 'Físico', 'Contratações', 'Economias e Savings'],
+        options=['Geral', 'Financeiro', 'Físico', 'Contratações', 'Economias e Savings', 'Relatórios'],
         key='option_view',
         default='Geral'
     )
 
     option = st.session_state.get('option_view', 'Geral')
-    data_gerencial = data_gerencial.merge(data_monday[['SIGLA', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA']].drop_duplicates(), how='left', left_on='sigla', right_on='SIGLA').drop(columns=['SIGLA'], errors='ignore')
+    data_gerencial = data_gerencial.merge(data_monday[['SIGLA', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']].drop_duplicates(), how='left', left_on='sigla', right_on='SIGLA').drop(columns=['SIGLA'], errors='ignore')
     
     cols_map = {
-        'Geral': ['sigla', 'created_at', 'periodo_custo', 'custo_total', 'desvio_porcentual', 'curva_base', 'realizado_porcentual', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total', 'HUB', 'VISI', 'PBI_RG'],
+        'Geral': ['sigla', 'periodo_custo', 'custo_total', 'desvio_porcentual', 'curva_base', 'realizado_porcentual', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total', 'saldo_saving', 'HUB', 'VISI', 'PBI_RG'],
         'Financeiro': ['sigla', 'periodo_custo', 'custo_obra', 'change_order', 'custo_total', 'tendencia', 'desvio_porcentual'],
         'Físico': ['sigla', 'periodo_avanco', 'curva_base', 'realizado_porcentual', 'atraso_avanco'],
-        'Contratações': ['sigla', 'created_at', 'contratado_direto', 'contratado_indireto', 'contratado_total'],
-        'Economias e Savings': ['sigla', 'created_at', 'economia_total_direto', 'economia_total_indireto', 'economia_total', 'saving_direto', 'saving_indireto', 'saving_total', 'saving_pago_direto', 'saving_pago_indireto', 'saving_pago_total']
+        'Contratações': ['sigla', 'contratado_direto', 'contratado_indireto', 'contratado_total'],
+        'Economias e Savings': ['sigla', 'economia_total_direto', 'economia_total_indireto', 'economia_total', 'saving_indireto', 'saving_pago_indireto', 'saldo_saving'],
+        'Relatórios': ['sigla', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']
     }
     
     cols_to_show = cols_map.get(option, data_gerencial.columns.tolist())
     df_display = data_gerencial[cols_to_show].copy()
-    colunas_para_estilizar = [c for c in ['desvio_porcentual', 'atraso_avanco'] if c in cols_to_show]
+    colunas_para_estilizar = [c for c in ['desvio_porcentual', 'atraso_avanco', 'saldo_saving'] if c in cols_to_show]
 
     df_styled = (
         df_display.style.applymap(style_prediction, subset=colunas_para_estilizar)
