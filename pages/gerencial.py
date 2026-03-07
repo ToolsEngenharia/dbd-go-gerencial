@@ -120,7 +120,7 @@ dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
 
 data_gerencial = data_gerencial[data_gerencial['sigla'].isin(df_filtered['SIGLA'].unique())]
 # data_gerencial = data_gerencial.drop(columns=['id'], errors='ignore')
-data_gerencial[['desvio_porcentual', 'curva_base', 'realizado_porcentual']] = data_gerencial[['desvio_porcentual', 'curva_base', 'realizado_porcentual']].apply(pd.to_numeric, errors='coerce') * 100
+data_gerencial[['porcentual_desvio', 'curva_base', 'realizado_porcentual']] = data_gerencial[['porcentual_desvio', 'curva_base', 'realizado_porcentual']].apply(pd.to_numeric, errors='coerce') * 100
 data_gerencial['data_atualizacao'] = pd.to_datetime(data_gerencial['data_atualizacao'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_custo'] = pd.to_datetime(data_gerencial['periodo_custo'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_avanco'] = pd.to_datetime(data_gerencial['periodo_avanco'], errors='coerce').dt.strftime('%Y-%m')
@@ -135,12 +135,14 @@ config = {
     'tendencia': st.column_config.NumberColumn('Tendência', format="R$ %.2f"),
     'gasto_competencia_acumulado': st.column_config.NumberColumn('Gasto Acumulado', format="R$ %.2f"),
     'porcentual_consumido': st.column_config.NumberColumn('Consumido %', format='%.2f%%'),
-
-    'desvio_porcentual': st.column_config.NumberColumn('Desvio %', format='%.2f%%'),
+    'percentual_contratado': st.column_config.NumberColumn('Contratado %', format='%.2f%%'),
+    'percentual_remunerado': st.column_config.NumberColumn('Remuneração %', format='%.2f%%'),
+    'desvio': st.column_config.NumberColumn('Desvio', format="R$ %.2f"),
+    'porcentual_desvio': st.column_config.NumberColumn('Desvio %', format='%.2f%%'),
     'taxa_paga_acumulada': st.column_config.NumberColumn('Taxa Paga Acumulada', format="R$ %.2f"),
     'taxa_liberada_acumulada': st.column_config.NumberColumn('Taxa Liberada Acumulada', format="R$ %.2f"),
     'curva_base': st.column_config.NumberColumn('Curva Base', format='%.2f%%'),
-    'realizado_porcentual': st.column_config.NumberColumn('Realizado %', format='%.2f%%'),
+    'porcentual_realizado': st.column_config.NumberColumn('Realizado %', format='%.2f%%'),
     'atraso_avanco': st.column_config.TextColumn('Atraso Avanço'),
     'contratado_direto': st.column_config.NumberColumn('Contratado Direto', format="R$ %.2f"),
     'contratado_indireto': st.column_config.NumberColumn('Contratado Indireto', format="R$ %.2f"),
@@ -178,8 +180,8 @@ with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
     data_gerencial = data_gerencial.merge(data_monday[['SIGLA', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']].drop_duplicates(), how='left', left_on='sigla', right_on='SIGLA').drop(columns=['SIGLA'], errors='ignore')
     
     cols_map = {
-        'Geral': ['sigla', 'periodo_custo', 'custo_total', 'desvio_porcentual', 'curva_base', 'realizado_porcentual', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total', 'saldo_saving', 'HUB', 'VISI', 'PBI_RG'],
-        'Financeiro': ['sigla', 'periodo_custo', 'custo_obra', 'change_order', 'custo_total', 'tendencia', 'desvio_porcentual'],
+        'Geral': ['sigla', 'periodo_custo', 'tendencia', 'desvio', 'porcentual_desvio', 'percentual_contratado', 'percentual_contratado', 'curva_base', 'porcentual_realizado', 'percentual_remunerado', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total', 'saldo_saving', 'HUB', 'VISI', 'PBI_RG'],
+        'Financeiro': ['sigla', 'periodo_custo', 'custo_obra', 'change_order', 'custo_total', 'tendencia', 'porcentual_desvio'],
         'Físico': ['sigla', 'periodo_avanco', 'curva_base', 'realizado_porcentual', 'atraso_avanco'],
         'Contratações': ['sigla', 'contratado_direto', 'contratado_indireto', 'contratado_total'],
         'Economias e Savings': ['sigla', 'economia_total_direto', 'economia_total_indireto', 'economia_total', 'saving_indireto', 'saving_pago_indireto', 'saldo_saving'],
@@ -188,15 +190,20 @@ with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
     
     cols_to_show = cols_map.get(option, data_gerencial.columns.tolist())
     df_display = data_gerencial[cols_to_show].copy()
-    colunas_para_estilizar = [c for c in ['desvio_porcentual', 'atraso_avanco', 'saldo_saving'] if c in cols_to_show]
+    colunas_para_estilizar = [c for c in ['porcentual_desvio', 'atraso_avanco', 'saldo_saving'] if c in cols_to_show]
 
     df_styled = (
         df_display.style.applymap(style_prediction, subset=colunas_para_estilizar)
         if colunas_para_estilizar
         else df_display
     )
-
+    
     st.dataframe(df_styled, column_config=config, use_container_width=True, hide_index=True)
+
+    col01, col02, col03 = st.columns([1, 1, 1])
+    col01.metric('ECONOMIA TOTAL', value=f"R$ {data_gerencial['economia_total'].sum():,.2f}", delta=f"R$ {data_gerencial['economia_total'].sum() - data_gerencial['economia_total'].sum():,.2f}", delta_color="normal", border=True)
+    col02.metric('SAVING PAGO', value=f"R$ {data_gerencial['saving_pago_total'].sum():,.2f}", delta=f"R$ {data_gerencial['saving_pago_total'].sum() - data_gerencial['saving_pago_total'].sum():,.2f}", delta_color="normal", border=True)
+    col03.metric('SALDO SAVING', value=f"R$ {data_gerencial['saldo_saving'].sum():,.2f}", delta=f"R$ {data_gerencial['saldo_saving'].sum() - data_gerencial['saldo_saving'].sum():,.2f}", delta_color="normal", border=True)
 
 with st.expander(label='STATUS DAS ATIVIDADES - RDO', expanded=True, icon="📊"):
     with st.container(border=True):
