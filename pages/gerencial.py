@@ -120,7 +120,7 @@ dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
 
 data_gerencial = data_gerencial[data_gerencial['sigla'].isin(df_filtered['SIGLA'].unique())]
 # data_gerencial = data_gerencial.drop(columns=['id'], errors='ignore')
-data_gerencial[['porcentual_desvio', 'curva_base', 'realizado_porcentual']] = data_gerencial[['porcentual_desvio', 'curva_base', 'realizado_porcentual']].apply(pd.to_numeric, errors='coerce') * 100
+data_gerencial[['porcentual_desvio', 'curva_base', 'porcentual_realizado']] = data_gerencial[['porcentual_desvio', 'curva_base', 'porcentual_realizado']].apply(pd.to_numeric, errors='coerce') * 100
 data_gerencial['data_atualizacao'] = pd.to_datetime(data_gerencial['data_atualizacao'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_custo'] = pd.to_datetime(data_gerencial['periodo_custo'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_avanco'] = pd.to_datetime(data_gerencial['periodo_avanco'], errors='coerce').dt.strftime('%Y-%m')
@@ -180,9 +180,9 @@ with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
     data_gerencial = data_gerencial.merge(data_monday[['SIGLA', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']].drop_duplicates(), how='left', left_on='sigla', right_on='SIGLA').drop(columns=['SIGLA'], errors='ignore')
     
     cols_map = {
-        'Geral': ['sigla', 'periodo_custo', 'tendencia', 'desvio', 'porcentual_desvio', 'percentual_contratado', 'percentual_contratado', 'curva_base', 'porcentual_realizado', 'percentual_remunerado', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total', 'saldo_saving', 'HUB', 'VISI', 'PBI_RG'],
+        'Geral': ['sigla', 'tendencia', 'desvio', 'porcentual_desvio', 'percentual_contratado', 'curva_base', 'porcentual_realizado', 'percentual_remunerado', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total', 'saldo_saving', 'HUB', 'VISI', 'PBI_RG'],
         'Financeiro': ['sigla', 'periodo_custo', 'custo_obra', 'change_order', 'custo_total', 'tendencia', 'porcentual_desvio'],
-        'Físico': ['sigla', 'periodo_avanco', 'curva_base', 'realizado_porcentual', 'atraso_avanco'],
+        'Físico': ['sigla', 'periodo_avanco', 'curva_base', 'porcentual_realizado', 'atraso_avanco'],
         'Contratações': ['sigla', 'contratado_direto', 'contratado_indireto', 'contratado_total'],
         'Economias e Savings': ['sigla', 'economia_total_direto', 'economia_total_indireto', 'economia_total', 'saving_indireto', 'saving_pago_indireto', 'saldo_saving'],
         'Relatórios': ['sigla', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']
@@ -200,10 +200,11 @@ with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
     
     st.dataframe(df_styled, column_config=config, use_container_width=True, hide_index=True)
 
-    col01, col02, col03 = st.columns([1, 1, 1])
-    col01.metric('ECONOMIA TOTAL', value=f"R$ {data_gerencial['economia_total'].sum():,.2f}", delta=f"R$ {data_gerencial['economia_total'].sum() - data_gerencial['economia_total'].sum():,.2f}", delta_color="normal", border=True)
-    col02.metric('SAVING PAGO', value=f"R$ {data_gerencial['saving_pago_total'].sum():,.2f}", delta=f"R$ {data_gerencial['saving_pago_total'].sum() - data_gerencial['saving_pago_total'].sum():,.2f}", delta_color="normal", border=True)
-    col03.metric('SALDO SAVING', value=f"R$ {data_gerencial['saldo_saving'].sum():,.2f}", delta=f"R$ {data_gerencial['saldo_saving'].sum() - data_gerencial['saldo_saving'].sum():,.2f}", delta_color="normal", border=True)
+    if option == 'Geral' or option == 'Economias e Savings':
+        col01, col02, col03 = st.columns([1, 1, 1])
+        col01.metric('ECONOMIA TOTAL', value=f"R$ {data_gerencial['economia_total'].sum():,.2f}", border=True)
+        col02.metric('SAVING PAGO', value=f"R$ {data_gerencial['saving_pago_total'].sum():,.2f}", border=True)
+        col03.metric('SALDO SAVING', value=f"R$ {data_gerencial['saldo_saving'].sum():,.2f}", border=True)
 
 with st.expander(label='STATUS DAS ATIVIDADES - RDO', expanded=True, icon="📊"):
     with st.container(border=True):
