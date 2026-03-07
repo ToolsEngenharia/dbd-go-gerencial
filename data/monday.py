@@ -51,6 +51,7 @@ def transformar_dados(input_data):
             "PBI_RG": extract_hub('link_mkskfawa'),
             "PBI_RE": extract_hub('link_mkmw87fc'),
             "PBI_RA": extract_hub('link_mkmw93z2'),
+            "PBI_RQ": extract_hub('link_mkmw93z2'),
         }
         resultado.append(novo_item)
     resultado = [item for item in resultado if item['PRODUTO'] and 'PROJETO' not in item['PRODUTO'].upper() and 'GESTÃO' not in item['PRODUTO'].upper() and 'Finalizado' not in item['FASE'] and 'Paralisado' not in item['FASE']]
