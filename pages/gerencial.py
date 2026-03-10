@@ -31,7 +31,7 @@ data_monday = pd.DataFrame(get_dataModay(926240878))
 
 data_monday['PRODUTO'] = data_monday['PRODUTO'].str.replace('GERENCIAMENTO DE OBRA ', '', regex=False)
 data_monday = data_monday[~data_monday['RCR'].isin(['', 'DELETED MEMBER', 'MEMBRO EXCLUÍDO'])]
-#data_gerencial = data_gerencial.drop_duplicates(subset=['tendencia'])
+data_gerencial = data_gerencial.drop_duplicates(subset=['tendencia'])
 
 obras = data_monday['SIGLA'].dropna().unique().tolist()
 prod = data_monday['PRODUTO'].dropna().unique().tolist()
@@ -136,7 +136,7 @@ config = {
     'tendencia': st.column_config.NumberColumn('Tendência', format="R$ %.2f"),
     'gasto_competencia_acumulado': st.column_config.NumberColumn('Gasto Acumulado', format="R$ %.2f"),
     'percentual_consumido': st.column_config.NumberColumn('Consumido %', format='%.2f%%'),
-    'percentual_contratado': st.column_config.NumberColumn('Contratado %', format='%.2f%%'),
+    'percentual_contratado': st.column_config.ProgressColumn('Contratado %', format='%.2f%%', help="Percentual de valor contratado em relação ao custo total. Indica quanto do custo total já foi comprometido por meio de contratos.", max_value=100),
     'percentual_remunerado': st.column_config.ProgressColumn('Remuneração %', format='%.2f%%', help="Percentual de remuneração em relação ao custo total. Indica quanto do custo total já foi remunerado.", max_value=100),
     'percentual_economia': st.column_config.NumberColumn('Economia %', format='%.2f%%'),
     'desvio': st.column_config.NumberColumn('Desvio', format="R$ %.2f"),
@@ -175,8 +175,8 @@ with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
         'Financeiro': ['sigla', 'periodo_custo', 'custo_obra', 'change_order', 'custo_total', 'tendencia', 'desvio', 'percentual_desvio'],
         'Renumeração': ['sigla', 'taxa', 'taxa_liberada_acumulada', 'taxa_paga_acumulada', 'percentual_remunerado'],
         'Físico': ['sigla', 'periodo_avanco', 'curva_base', 'percentual_realizado', 'atraso_avanco'],
-        'Contratações': ['sigla', 'contratado_direto', 'contratado_indireto', 'contratado_total'],
-        'Economias e Savings': ['sigla', 'economia_total_direto', 'economia_total_indireto', 'economia_total','percentual_economia', 'saving_total', 'saving_pago_total', 'saldo_saving'],
+        'Contratações': ['sigla', 'contratado_direto', 'contratado_indireto', 'contratado_total', 'percentual_contratado', 'economia_total'],
+        'Informações Adicionais': ['sigla', 'RCR', 'FASE', 'AREA' ,'LOCAL', 'CONSTRUTORA', 'ARQUITETURA', 'CLIENTE'],
         'Relatórios': ['sigla', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']
     }
     layout = st.container(horizontal=True, horizontal_alignment='center')
@@ -189,7 +189,7 @@ with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
     )
 
     option = st.session_state.get('option_view', 'Geral')
-    data_gerencial = data_gerencial.merge(data_monday[['SIGLA','FASE', 'RCR', 'AREA', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']].drop_duplicates(), how='left', left_on='sigla', right_on='SIGLA').drop(columns=['SIGLA'], errors='ignore')
+    data_gerencial = data_gerencial.merge(data_monday[['SIGLA','FASE', 'RCR', 'AREA','LOCAL','CONSTRUTORA','ARQUITETURA','CLIENTE', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']].drop_duplicates(), how='left', left_on='sigla', right_on='SIGLA').drop(columns=['SIGLA'], errors='ignore')
     
     cols_to_show = cols_map.get(option, data_gerencial.columns.tolist())
     df_display = data_gerencial[cols_to_show].copy()
