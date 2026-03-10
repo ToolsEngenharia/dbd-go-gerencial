@@ -31,6 +31,7 @@ data_monday = pd.DataFrame(get_dataModay(926240878))
 
 data_monday['PRODUTO'] = data_monday['PRODUTO'].str.replace('GERENCIAMENTO DE OBRA ', '', regex=False)
 data_monday = data_monday[~data_monday['RCR'].isin(['', 'DELETED MEMBER', 'MEMBRO EXCLUÍDO'])]
+#data_gerencial = data_gerencial.drop_duplicates(subset=['tendencia'])
 
 obras = data_monday['SIGLA'].dropna().unique().tolist()
 prod = data_monday['PRODUTO'].dropna().unique().tolist()
@@ -120,7 +121,7 @@ dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
 
 data_gerencial = data_gerencial[data_gerencial['sigla'].isin(df_filtered['SIGLA'].unique())]
 # data_gerencial = data_gerencial.drop(columns=['id'], errors='ignore')
-data_gerencial[['porcentual_desvio', 'curva_base', 'porcentual_realizado']] = data_gerencial[['porcentual_desvio', 'curva_base', 'porcentual_realizado']].apply(pd.to_numeric, errors='coerce') * 100
+data_gerencial[['percentual_desvio', 'curva_base', 'percentual_realizado']] = data_gerencial[['percentual_desvio', 'curva_base', 'percentual_realizado']].apply(pd.to_numeric, errors='coerce') * 100
 data_gerencial['data_atualizacao'] = pd.to_datetime(data_gerencial['data_atualizacao'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_custo'] = pd.to_datetime(data_gerencial['periodo_custo'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_avanco'] = pd.to_datetime(data_gerencial['periodo_avanco'], errors='coerce').dt.strftime('%Y-%m')
@@ -134,15 +135,17 @@ config = {
     'custo_total': st.column_config.NumberColumn('Custo Total', format="R$ %.2f"),
     'tendencia': st.column_config.NumberColumn('Tendência', format="R$ %.2f"),
     'gasto_competencia_acumulado': st.column_config.NumberColumn('Gasto Acumulado', format="R$ %.2f"),
-    'porcentual_consumido': st.column_config.NumberColumn('Consumido %', format='%.2f%%'),
+    'percentual_consumido': st.column_config.NumberColumn('Consumido %', format='%.2f%%'),
     'percentual_contratado': st.column_config.NumberColumn('Contratado %', format='%.2f%%'),
-    'percentual_remunerado': st.column_config.NumberColumn('Remuneração %', format='%.2f%%'),
+    'percentual_remunerado': st.column_config.ProgressColumn('Remuneração %', format='%.2f%%', help="Percentual de remuneração em relação ao custo total. Indica quanto do custo total já foi remunerado.", max_value=100),
+    'percentual_economia': st.column_config.NumberColumn('Economia %', format='%.2f%%'),
     'desvio': st.column_config.NumberColumn('Desvio', format="R$ %.2f"),
-    'porcentual_desvio': st.column_config.NumberColumn('Desvio %', format='%.2f%%'),
+    'percentual_desvio': st.column_config.NumberColumn('Desvio %', format='%.2f%%'),
+    'taxa': st.column_config.NumberColumn('Taxa', format="R$ %.2f"),
     'taxa_paga_acumulada': st.column_config.NumberColumn('Taxa Paga Acumulada', format="R$ %.2f"),
     'taxa_liberada_acumulada': st.column_config.NumberColumn('Taxa Liberada Acumulada', format="R$ %.2f"),
     'curva_base': st.column_config.NumberColumn('Curva Base', format='%.2f%%'),
-    'porcentual_realizado': st.column_config.NumberColumn('Realizado %', format='%.2f%%'),
+    'percentual_realizado': st.column_config.ProgressColumn('Realizado %', format='%.2f%%', help="Percentual de avanço físico em relação à curva base. Indica o progresso físico da obra em comparação com o planejado.", max_value=100),
     'atraso_avanco': st.column_config.TextColumn('Atraso Avanço'),
     'contratado_direto': st.column_config.NumberColumn('Contratado Direto', format="R$ %.2f"),
     'contratado_indireto': st.column_config.NumberColumn('Contratado Indireto', format="R$ %.2f"),
@@ -158,8 +161,8 @@ config = {
     'saving_pago_total': st.column_config.NumberColumn('Saving Pago Total', format="R$ %.2f"),
     'saldo_saving': st.column_config.NumberColumn('Saldo Saving', format="R$ %.2f"),
     'periodo_avanco': st.column_config.TextColumn('Período Avanço'),
-    'HUB': st.column_config.LinkColumn('HUB', display_text="🔗", width=10),
-    'VISI': st.column_config.LinkColumn('VISI', display_text="🔗", width=10),
+    'HUB': st.column_config.LinkColumn('HUB', display_text="🔗", width=20),
+    'VISI': st.column_config.LinkColumn('VISI', display_text="🔗", width=20),
     'PBI_RG': st.column_config.LinkColumn('Rel. Gerencial', display_text="🔗", width=50),
     'PBI_RE': st.column_config.LinkColumn('RDO + Efetivo', display_text="🔗", width=50),
     'PBI_RA': st.column_config.LinkColumn('Apontamentos', display_text="🔗", width=50),
@@ -167,30 +170,30 @@ config = {
 }
 
 with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
+    cols_map = {
+        'Geral': ['sigla', 'tendencia', 'percentual_desvio','percentual_consumido', 'percentual_contratado', 'curva_base', 'percentual_realizado', 'percentual_remunerado', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total', 'saldo_saving', 'HUB', 'VISI', 'PBI_RG'],
+        'Financeiro': ['sigla', 'periodo_custo', 'custo_obra', 'change_order', 'custo_total', 'tendencia', 'desvio', 'percentual_desvio'],
+        'Renumeração': ['sigla', 'taxa', 'taxa_liberada_acumulada', 'taxa_paga_acumulada', 'percentual_remunerado'],
+        'Físico': ['sigla', 'periodo_avanco', 'curva_base', 'percentual_realizado', 'atraso_avanco'],
+        'Contratações': ['sigla', 'contratado_direto', 'contratado_indireto', 'contratado_total'],
+        'Economias e Savings': ['sigla', 'economia_total_direto', 'economia_total_indireto', 'economia_total','percentual_economia', 'saving_total', 'saving_pago_total', 'saldo_saving'],
+        'Relatórios': ['sigla', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']
+    }
     layout = st.container(horizontal=True, horizontal_alignment='center')
     layout.segmented_control(
         label="Selecione a visualização",
         label_visibility='hidden',
-        options=['Geral', 'Financeiro', 'Físico', 'Contratações', 'Economias e Savings', 'Relatórios'],
+        options=list(cols_map.keys()),
         key='option_view',
         default='Geral'
     )
 
     option = st.session_state.get('option_view', 'Geral')
-    data_gerencial = data_gerencial.merge(data_monday[['SIGLA', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']].drop_duplicates(), how='left', left_on='sigla', right_on='SIGLA').drop(columns=['SIGLA'], errors='ignore')
-    
-    cols_map = {
-        'Geral': ['sigla', 'tendencia', 'desvio', 'porcentual_desvio', 'percentual_contratado', 'curva_base', 'porcentual_realizado', 'percentual_remunerado', 'atraso_avanco', 'contratado_total', 'economia_total', 'saving_total', 'saldo_saving', 'HUB', 'VISI', 'PBI_RG'],
-        'Financeiro': ['sigla', 'periodo_custo', 'custo_obra', 'change_order', 'custo_total', 'tendencia', 'porcentual_desvio'],
-        'Físico': ['sigla', 'periodo_avanco', 'curva_base', 'porcentual_realizado', 'atraso_avanco'],
-        'Contratações': ['sigla', 'contratado_direto', 'contratado_indireto', 'contratado_total'],
-        'Economias e Savings': ['sigla', 'economia_total_direto', 'economia_total_indireto', 'economia_total', 'saving_indireto', 'saving_pago_indireto', 'saldo_saving'],
-        'Relatórios': ['sigla', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']
-    }
+    data_gerencial = data_gerencial.merge(data_monday[['SIGLA','FASE', 'RCR', 'AREA', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']].drop_duplicates(), how='left', left_on='sigla', right_on='SIGLA').drop(columns=['SIGLA'], errors='ignore')
     
     cols_to_show = cols_map.get(option, data_gerencial.columns.tolist())
     df_display = data_gerencial[cols_to_show].copy()
-    colunas_para_estilizar = [c for c in ['porcentual_desvio', 'atraso_avanco', 'saldo_saving'] if c in cols_to_show]
+    colunas_para_estilizar = [c for c in ['percentual_desvio', 'atraso_avanco', 'saldo_saving'] if c in cols_to_show]
 
     df_styled = (
         df_display.style.applymap(style_prediction, subset=colunas_para_estilizar)
