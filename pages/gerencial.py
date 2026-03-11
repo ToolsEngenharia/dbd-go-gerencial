@@ -115,6 +115,7 @@ data_gerencial[['percentual_desvio', 'curva_base', 'percentual_realizado']] = da
 data_gerencial['data_atualizacao'] = pd.to_datetime(data_gerencial['data_atualizacao'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_custo'] = pd.to_datetime(data_gerencial['periodo_custo'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_avanco'] = pd.to_datetime(data_gerencial['periodo_avanco'], errors='coerce').dt.strftime('%Y-%m')
+data_gerencial = data_gerencial.sort_values(by='sigla')
 
 with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
     layout = st.container(horizontal=True, horizontal_alignment='center')

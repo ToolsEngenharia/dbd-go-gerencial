@@ -18,6 +18,7 @@ COLUMN_CONFIG = {
     'percentual_remunerado': st.column_config.ProgressColumn(
         'Remuneração %', format='%.2f%%',
         help="Percentual de remuneração em relação ao custo total.",
+        width=100,
         max_value=100
     ),
     'percentual_economia': st.column_config.NumberColumn('Economia %', format='%.2f%%'),
@@ -29,13 +30,16 @@ COLUMN_CONFIG = {
     'curva_base': st.column_config.ProgressColumn(
         'Curva Base', format='%.2f%%',
         help="Percentual de avanço físico previsto na curva base para o período.",
+        width=100,
         max_value=100
     ),
     'percentual_realizado': st.column_config.ProgressColumn(
         'Realizado %', format='%.2f%%',
         help="Percentual de avanço físico em relação à curva base.",
-        max_value=100
+        max_value=100,
+        width=100
     ),
+    'data_termino_previsto': st.column_config.DateColumn('Término Previsto'),
     'atraso_avanco': st.column_config.TextColumn('Atraso Avanço'),
     'contratado_direto': st.column_config.NumberColumn('Contratado Direto', format="R$ %.2f"),
     'contratado_indireto': st.column_config.NumberColumn('Contratado Indireto', format="R$ %.2f"),
@@ -62,7 +66,7 @@ COLUMN_CONFIG = {
 COLS_MAP = {
     'Geral': [
         'sigla', 'tendencia', 'percentual_desvio', 'percentual_consumido',
-        'percentual_contratado', 'curva_base', 'percentual_realizado',
+        'percentual_contratado', 'curva_base', 'data_termino_previsto', 'percentual_realizado',
         'percentual_remunerado', 'atraso_avanco', 'contratado_total',
         'economia_total', 'saving_total', 'saldo_saving', 'HUB', 'VISI', 'PBI_RG'
     ],
@@ -71,7 +75,7 @@ COLS_MAP = {
         'custo_total', 'tendencia', 'desvio', 'percentual_desvio'
     ],
     'Renumeração': ['sigla', 'taxa', 'taxa_liberada_acumulada', 'taxa_paga_acumulada', 'percentual_remunerado'],
-    'Físico': ['sigla', 'periodo_avanco', 'curva_base', 'percentual_realizado', 'atraso_avanco'],
+    'Físico': ['sigla', 'periodo_avanco', 'curva_base', 'data_termino_previsto', 'percentual_realizado', 'atraso_avanco'],
     'Contratações': [
         'sigla', 'contratado_direto', 'contratado_indireto',
         'contratado_total', 'percentual_contratado', 'economia_total'
