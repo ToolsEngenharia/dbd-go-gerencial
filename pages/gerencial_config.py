@@ -79,3 +79,6 @@ COLS_MAP = {
     'Informações Adicionais': ['sigla', 'RCR', 'FASE', 'AREA', 'LOCAL', 'CONSTRUTORA', 'ARQUITETURA', 'CLIENTE'],
     'Relatórios': ['sigla', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ'],
 }
+
+def style_prediction(v):
+    return 'color: #d10000; font-weight: bold;' if v > 0 else ('color: #008000; font-weight: bold;' if v < 0 else 'color: #808080;')
