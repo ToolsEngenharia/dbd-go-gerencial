@@ -4,11 +4,11 @@ COLUMN_CONFIG = {
     'data_atualizacao': st.column_config.TextColumn('Período'),
     'sigla': st.column_config.TextColumn('Obra (Sigla)'),
     'periodo_custo': st.column_config.TextColumn('Período Custo'),
-    'custo_obra': st.column_config.NumberColumn('Custo Obra', format="R$ %.2f"),
-    'change_order': st.column_config.NumberColumn('Change Order', format="R$ %.2f"),
-    'custo_total': st.column_config.NumberColumn('Custo Total', format="R$ %.2f"),
-    'tendencia': st.column_config.NumberColumn('Tendência', format="R$ %.2f"),
-    'gasto_competencia_acumulado': st.column_config.NumberColumn('Gasto Acumulado', format="R$ %.2f"),
+    'custo_obra': st.column_config.TextColumn('Custo Obra'),
+    'change_order': st.column_config.TextColumn('Change Order'),
+    'custo_total': st.column_config.TextColumn('Custo Total'),
+    'tendencia': st.column_config.TextColumn('Tendência'),
+    'gasto_competencia_acumulado': st.column_config.TextColumn('Gasto Acumulado'),
     'percentual_consumido': st.column_config.NumberColumn('Consumido %', format='%.2f%%'),
     'percentual_contratado': st.column_config.ProgressColumn(
         'Contratado %', format='%.2f%%',
@@ -22,11 +22,11 @@ COLUMN_CONFIG = {
         max_value=100
     ),
     'percentual_economia': st.column_config.NumberColumn('Economia %', format='%.2f%%'),
-    'desvio': st.column_config.NumberColumn('Desvio', format="R$ %.2f"),
+    'desvio': st.column_config.TextColumn('Desvio'),
     'percentual_desvio': st.column_config.NumberColumn('Desvio %', format='%.2f%%'),
-    'taxa': st.column_config.NumberColumn('Taxa', format="R$ %.2f"),
-    'taxa_paga_acumulada': st.column_config.NumberColumn('Taxa Paga Acumulada', format="R$ %.2f"),
-    'taxa_liberada_acumulada': st.column_config.NumberColumn('Taxa Liberada Acumulada', format="R$ %.2f"),
+    'taxa': st.column_config.TextColumn('Taxa'),
+    'taxa_paga_acumulada': st.column_config.TextColumn('Taxa Paga Acumulada'),
+    'taxa_liberada_acumulada': st.column_config.TextColumn('Taxa Liberada Acumulada'),
     'curva_base': st.column_config.ProgressColumn(
         'Curva Base', format='%.2f%%',
         help="Percentual de avanço físico previsto na curva base para o período.",
@@ -41,19 +41,19 @@ COLUMN_CONFIG = {
     ),
     'data_termino_previsto': st.column_config.DateColumn('Término Previsto'),
     'atraso_avanco': st.column_config.TextColumn('Atraso Avanço'),
-    'contratado_direto': st.column_config.NumberColumn('Contratado Direto', format="R$ %.2f"),
-    'contratado_indireto': st.column_config.NumberColumn('Contratado Indireto', format="R$ %.2f"),
-    'contratado_total': st.column_config.NumberColumn('Contratado Total', format="R$ %.2f"),
-    'economia_total_direto': st.column_config.NumberColumn('Economia Total Direto', format="R$ %.2f"),
-    'economia_total_indireto': st.column_config.NumberColumn('Economia Total Indireto', format="R$ %.2f"),
-    'economia_total': st.column_config.NumberColumn('Economia Total', format="R$ %.2f"),
-    'saving_direto': st.column_config.NumberColumn('Saving Direto', format="R$ %.2f"),
-    'saving_indireto': st.column_config.NumberColumn('Saving Indireto', format="R$ %.2f"),
-    'saving_total': st.column_config.NumberColumn('Saving Total', format="R$ %.2f"),
-    'saving_pago_direto': st.column_config.NumberColumn('Saving Pago Direto', format="R$ %.2f"),
-    'saving_pago_indireto': st.column_config.NumberColumn('Saving Pago Indireto', format="R$ %.2f"),
-    'saving_pago_total': st.column_config.NumberColumn('Saving Pago Total', format="R$ %.2f"),
-    'saldo_saving': st.column_config.NumberColumn('Saldo Saving', format="R$ %.2f"),
+    'contratado_direto': st.column_config.TextColumn('Contratado Direto'),
+    'contratado_indireto': st.column_config.TextColumn('Contratado Indireto'),
+    'contratado_total': st.column_config.TextColumn('Contratado Total'),
+    'economia_total_direto': st.column_config.TextColumn('Economia Total Direto'),
+    'economia_total_indireto': st.column_config.TextColumn('Economia Total Indireto'),
+    'economia_total': st.column_config.TextColumn('Economia Total'),
+    'saving_direto': st.column_config.TextColumn('Saving Direto'),
+    'saving_indireto': st.column_config.TextColumn('Saving Indireto'),
+    'saving_total': st.column_config.TextColumn('Saving Total'),
+    'saving_pago_direto': st.column_config.TextColumn('Saving Pago Direto'),
+    'saving_pago_indireto': st.column_config.TextColumn('Saving Pago Indireto'),
+    'saving_pago_total': st.column_config.TextColumn('Saving Pago Total'),
+    'saldo_saving': st.column_config.TextColumn('Saldo Saving'),
     'periodo_avanco': st.column_config.TextColumn('Período Avanço'),
     'HUB': st.column_config.LinkColumn('HUB', display_text="🔗", width=20),
     'VISI': st.column_config.LinkColumn('VISI', display_text="🔗", width=20),
@@ -83,6 +83,21 @@ COLS_MAP = {
     'Informações Adicionais': ['sigla', 'RCR', 'FASE', 'AREA', 'LOCAL', 'CONSTRUTORA', 'ARQUITETURA', 'CLIENTE'],
     'Relatórios': ['sigla', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ'],
 }
+
+COLUNAS_MONETARIAS = [
+    'custo_obra', 'change_order', 'custo_total', 'tendencia',
+    'gasto_competencia_acumulado', 'desvio', 'taxa', 'taxa_paga_acumulada',
+    'taxa_liberada_acumulada', 'contratado_direto', 'contratado_indireto',
+    'contratado_total', 'economia_total_direto', 'economia_total_indireto',
+    'economia_total', 'saving_direto', 'saving_indireto', 'saving_total',
+    'saving_pago_direto', 'saving_pago_indireto', 'saving_pago_total', 'saldo_saving',
+]
+
+def fmt_brl(v):
+    try:
+        return f"R$ {v:,.2f}".replace(',', 'X').replace('.', ',').replace('X', '.')
+    except (TypeError, ValueError):
+        return v
 
 def style_prediction(v):
     return 'color: #d10000; font-weight: bold;' if v > 0 else ('color: #008000; font-weight: bold;' if v < 0 else 'color: #808080;')

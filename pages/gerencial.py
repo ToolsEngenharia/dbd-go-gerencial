@@ -6,10 +6,11 @@ import streamlit.components.v2 as stc
 from data.monday import get_dataModay
 from pages.components.header import _render_header
 from data.supabase import fetch_data_from_tablefull
-from pages.gerencial_config import COLUMN_CONFIG, COLS_MAP, style_prediction
+from pages.gerencial_config import COLUMN_CONFIG, COLS_MAP, COLUNAS_MONETARIAS, fmt_brl, style_prediction
 
 frontend_dir = pathlib.Path(__file__).parent.resolve().parent / "components" / "calendarTabular"
 frontend_dir_pbi = pathlib.Path(__file__).parent.resolve().parent / "components" / "calendarTabular_PBI"
+
 calen = stc.component(
     "calend",
     html=pathlib.Path(frontend_dir / "index.html").read_text(encoding="utf-8"),
@@ -110,7 +111,6 @@ dataset_pbi = data_pbi[data_pbi['sigla'].isin(df_filtered['SIGLA'].unique())]
 dados_pbi = dataset_pbi[['sigla', 'data_relatorio']].to_dict(orient='records')
 
 data_gerencial = data_gerencial[data_gerencial['sigla'].isin(df_filtered['SIGLA'].unique())]
-# data_gerencial = data_gerencial.drop(columns=['id'], errors='ignore')
 data_gerencial[['percentual_desvio', 'curva_base', 'percentual_realizado']] = data_gerencial[['percentual_desvio', 'curva_base', 'percentual_realizado']].apply(pd.to_numeric, errors='coerce') * 100
 data_gerencial['data_atualizacao'] = pd.to_datetime(data_gerencial['data_atualizacao'], errors='coerce').dt.strftime('%Y-%m')
 data_gerencial['periodo_custo'] = pd.to_datetime(data_gerencial['periodo_custo'], errors='coerce').dt.strftime('%Y-%m')
@@ -129,23 +129,27 @@ with st.expander(label='CENTRO DE GERENCIAMENTO', expanded=True, icon="📊"):
 
     option = st.session_state.get('option_view', 'Geral')
     data_gerencial = data_gerencial.merge(data_monday[['SIGLA','FASE', 'RCR', 'AREA','LOCAL','CONSTRUTORA','ARQUITETURA','CLIENTE', 'HUB', 'VISI', 'PBI_RG', 'PBI_RE', 'PBI_RA', 'PBI_RQ']].drop_duplicates(), how='left', left_on='sigla', right_on='SIGLA').drop(columns=['SIGLA'], errors='ignore')
-    
+
     cols_to_show = COLS_MAP.get(option, data_gerencial.columns.tolist())
     df_display = data_gerencial[cols_to_show].copy()
     colunas_para_estilizar = [c for c in ['percentual_desvio', 'atraso_avanco', 'saldo_saving'] if c in cols_to_show]
 
+    fmt_map = {col: fmt_brl for col in COLUNAS_MONETARIAS if col in cols_to_show}
+
     df_styled = (
-        df_display.style.applymap(style_prediction, subset=colunas_para_estilizar)
+        df_display.style
+        .applymap(style_prediction, subset=colunas_para_estilizar)
+        .format(fmt_map, na_rep='-')
         if colunas_para_estilizar
-        else df_display
+        else df_display.style.format(fmt_map, na_rep='-')
     )
     st.dataframe(df_styled, column_config=COLUMN_CONFIG, use_container_width=True, hide_index=True)
 
     if option == 'Geral' or option == 'Economias e Savings':
         col01, col02, col03 = st.columns([1, 1, 1])
-        col01.metric('ECONOMIA TOTAL', value=f"R$ {data_gerencial['economia_total'].sum():,.2f}", border=True)
-        col02.metric('SAVING PAGO', value=f"R$ {data_gerencial['saving_pago_total'].sum():,.2f}", border=True)
-        col03.metric('SALDO SAVING', value=f"R$ {data_gerencial['saldo_saving'].sum():,.2f}", border=True)
+        col01.metric('ECONOMIA TOTAL', value=fmt_brl(data_gerencial['economia_total'].sum()), border=True)
+        col02.metric('SAVING PAGO', value=fmt_brl(data_gerencial['saving_pago_total'].sum()), border=True)
+        col03.metric('SALDO SAVING', value=fmt_brl(data_gerencial['saldo_saving'].sum()), border=True)
 
 with st.expander(label='STATUS DAS ATIVIDADES - RDO', expanded=True, icon="📊"):
     with st.container(border=True):
