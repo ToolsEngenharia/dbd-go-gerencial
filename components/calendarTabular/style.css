@@ -125,7 +125,6 @@ th.col-fixed {
   z-index: 30;
 }
 
-/* ── Coluna de resumo (sticky direita) ── */
 .col-summary {
   position: sticky;
   right: 0;
@@ -167,7 +166,7 @@ tbody tr:hover > td.col-summary {
 
 .is-weekend {
   background-color: #f1f5f9;
-  color: #a0aec0; 
+  color: #a0aec0;
 }
 
 th.is-today-col {
@@ -179,6 +178,30 @@ td.is-today-col {
   background-color: rgba(14, 147, 142, 0.12);
 }
 
+th.is-holiday {
+  background-color: #fef3c7 !important;
+  color: #92400e !important;
+}
+
+th.is-holiday .th-day-num {
+  color: #b45309 !important;
+}
+
+td.is-holiday {
+  background-color: #fffbeb !important;
+}
+
+.th-holiday-dot {
+  display: block;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background-color: #f59e0b;
+  margin: 0 auto;
+}
+
+th.is-holiday { cursor: help; }
+
 .icon-box {
   display: flex; align-items: center; justify-content: center;
   width: 28px; height: 28px;
@@ -187,10 +210,7 @@ td.is-today-col {
 }
 
 .check .icon-box { background-color: #d1fae5; color: #059669; }
-.x .icon-box {
-  background-color: transparent;
-  color: #fc8181;
-}
+.x .icon-box { background-color: transparent; color: #fc8181; }
 
 tr:last-child td { border-bottom: none; }
 th:last-child, td:last-child { border-right: none; }

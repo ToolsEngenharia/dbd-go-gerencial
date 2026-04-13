@@ -1,6 +1,7 @@
 export default function (component) {
 	const { parentElement, data, setTriggerValue } = component;
 
+	const feriadosCache = {};
 	const tableHead = parentElement.querySelector("#tableHead");
 	const tableBody = parentElement.querySelector("#tableBody");
 	const monthNames = ["Janeiro", "Fevereiro", "Março", "Abril", "Maio", "Junho", "Julho", "Agosto", "Setembro", "Outubro", "Novembro", "Dezembro"];
@@ -18,7 +19,23 @@ export default function (component) {
 		return (month === 1 && isLeapYear(year)) ? 29 : daysInMonth[month];
 	}
 
-	function renderTable(month, year) {
+	async function fetchFeriados(year) {
+		if (feriadosCache[year]) return feriadosCache[year];
+		try {
+			const res = await fetch(`https://brasilapi.com.br/api/feriados/v1/${year}`);
+			const list = await res.json();
+			const map = {};
+			list.forEach(f => { map[f.date] = f.name; });
+			feriadosCache[year] = map;
+			return map;
+		} catch {
+			feriadosCache[year] = {};
+			return {};
+		}
+	}
+
+	async function renderTable(month, year) {
+		const feriados = await fetchFeriados(year);
 		const numDays = getDaysInMonth(month, year);
 		const today = new Date();
 		today.setHours(0, 0, 0, 0);
@@ -29,18 +46,28 @@ export default function (component) {
 			const dateObj = new Date(year, month, d);
 			const dayOfWeek = weekDaysShort[dateObj.getDay()];
 			const dayIndex = dateObj.getDay();
+			const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 
 			const isToday = (dateObj.getTime() === today.getTime());
-			const classToday = isToday ? "is-today-col" : "";
-
 			const isWeekend = (dayIndex === 0 || dayIndex === 6);
-			const classWeekend = isWeekend ? "is-weekend" : "";
+			const isFeriado = !!feriados[dateString];
+			const feriadoNome = feriados[dateString] || "";
+
+			const classes = [
+				"col-day",
+				isWeekend ? "is-weekend" : "",
+				isToday ? "is-today-col" : "",
+				isFeriado ? "is-holiday" : ""
+			].filter(Boolean).join(" ");
+
+			const titleAttr = isFeriado ? `title="${feriadoNome}"` : "";
 
 			headerHTML += `
-		<th class="col-day ${classWeekend} ${classToday}">
+		<th class="${classes}" ${titleAttr}>
 			<div class="th-content">
-			<span class="th-day-week">${dayOfWeek}</span>
-			<span class="th-day-num">${d}</span>
+				<span class="th-day-week">${dayOfWeek}</span>
+				<span class="th-day-num">${d}</span>
+				${isFeriado ? `<span class="th-holiday-dot"></span>` : ""}
 			</div>
 		</th>
 		`;
@@ -57,7 +84,6 @@ export default function (component) {
 		headerHTML += `</tr>`;
 		tableHead.innerHTML = headerHTML;
 		tableBody.innerHTML = "";
-
 
 		const dadosFiltrados = data.filter(item => {
 			const dateIn = new Date(item.date_in);
@@ -83,17 +109,16 @@ export default function (component) {
 				const cellDate = new Date(year, month, d);
 				const dayIndex = cellDate.getDay();
 				const isWeekend = (dayIndex === 0 || dayIndex === 6);
+				const isFeriado = !!feriados[dateString];
 
-				if (isWeekend)
-					cell.classList.add("is-weekend");
-
-				if (cellDate.getTime() === today.getTime())
-					cell.classList.add("is-today-col");
+				if (isWeekend) cell.classList.add("is-weekend");
+				if (isFeriado) cell.classList.add("is-holiday");
+				if (cellDate.getTime() === today.getTime()) cell.classList.add("is-today-col");
 
 				if (cellDate <= today) {
 					const status = dadosFiltro.includes(dateString) ? 'check' : 'x';
 
-					if (status === 'x' && !isWeekend)
+					if (status === 'x' && !isWeekend && !isFeriado)
 						naoEnviadoCount++;
 
 					const iconDiv = document.createElement("div");
@@ -111,21 +136,18 @@ export default function (component) {
 
 			const summaryCell = document.createElement("td");
 			summaryCell.classList.add("col-summary");
-			if (naoEnviadoCount > 0) {
-				summaryCell.innerHTML = `<span class="summary-badge">${naoEnviadoCount}</span>`;
-			} else {
-				summaryCell.innerHTML = `<span class="summary-badge summary-badge--zero">${naoEnviadoCount}</span>`;
-			}
+			summaryCell.innerHTML = `<span class="summary-badge ${naoEnviadoCount === 0 ? 'summary-badge--zero' : ''}">${naoEnviadoCount}</span>`;
 			row.appendChild(summaryCell);
 
 			tableBody.appendChild(row);
 		});
+
 		parentElement.querySelector("#nextMonth").disabled = (year > today.getFullYear() || (year === today.getFullYear() && month >= today.getMonth()));
 		parentElement.querySelector("#monthYear").textContent = monthNames[month] + " " + year;
-		setTriggerValue('clicked',`${month + 1}-${year}`);
+		setTriggerValue('clicked', `${month + 1}-${year}`);
 	}
 
-	function changeMonth(offset) {
+	async function changeMonth(offset) {
 		currentMonth += offset;
 		if (currentMonth < 0) {
 			currentMonth = 11;
@@ -134,7 +156,7 @@ export default function (component) {
 			currentMonth = 0;
 			currentYear++;
 		}
-		renderTable(currentMonth, currentYear);
+		await renderTable(currentMonth, currentYear);
 	}
 
 	parentElement.querySelector("#prevMonth").addEventListener("click", () => changeMonth(-1));
