@@ -125,6 +125,46 @@ th.col-fixed {
   z-index: 30;
 }
 
+/* ── Coluna de resumo (sticky direita) ── */
+.col-summary {
+  position: sticky;
+  right: 0;
+  z-index: 20;
+  background-color: #ffffff;
+  border-left: 2px solid #e2e8f0;
+  border-right: none;
+  min-width: 60px;
+  text-align: center;
+}
+
+th.col-summary {
+  background-color: #f8fafc;
+  z-index: 30;
+}
+
+tbody tr:hover > td.col-summary {
+  background-color: #e2e8f0 !important;
+}
+
+.summary-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  background-color: #fee2e2;
+  color: #dc2626;
+  padding: 0 6px;
+}
+
+.summary-badge--zero {
+  background-color: #d1fae5;
+  color: #059669;
+}
+
 .is-weekend {
   background-color: #f1f5f9;
   color: #a0aec0; 
@@ -155,5 +195,5 @@ td.is-today-col {
 tr:last-child td { border-bottom: none; }
 th:last-child, td:last-child { border-right: none; }
 
-.icon-box.check { background-color: #d1fae5; color: #059669; } /* Verde Esmeralda */
-.icon-box.x { background-color: transparent; color: #fc8181; opacity: 0.4; } /* Vermelho suave */
+.icon-box.check { background-color: #d1fae5; color: #059669; }
+.icon-box.x { background-color: transparent; color: #fc8181; opacity: 0.4; }

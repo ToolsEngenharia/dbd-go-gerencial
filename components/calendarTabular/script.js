@@ -45,6 +45,15 @@ export default function (component) {
 		</th>
 		`;
 		}
+
+		headerHTML += `
+		<th class="col-summary">
+			<div class="th-content">
+				<span class="th-day-week">Não</span>
+				<span class="th-day-num">Env.</span>
+			</div>
+		</th>`;
+
 		headerHTML += `</tr>`;
 		tableHead.innerHTML = headerHTML;
 		tableBody.innerHTML = "";
@@ -66,22 +75,26 @@ export default function (component) {
 			cellName.textContent = projeto;
 			row.appendChild(cellName);
 
+			let naoEnviadoCount = 0;
+
 			for (let d = 1; d <= numDays; d++) {
 				const cell = document.createElement("td");
 				const dateString = `${year}-${String(month + 1).padStart(2, "0")}-${String(d).padStart(2, "0")}`;
 				const cellDate = new Date(year, month, d);
 				const dayIndex = cellDate.getDay();
+				const isWeekend = (dayIndex === 0 || dayIndex === 6);
 
-				if (dayIndex === 0 || dayIndex === 6)
+				if (isWeekend)
 					cell.classList.add("is-weekend");
 
 				if (cellDate.getTime() === today.getTime())
 					cell.classList.add("is-today-col");
 
 				if (cellDate <= today) {
-
 					const status = dadosFiltro.includes(dateString) ? 'check' : 'x';
 
+					if (status === 'x' && !isWeekend)
+						naoEnviadoCount++;
 
 					const iconDiv = document.createElement("div");
 					iconDiv.classList.add(status);
@@ -95,10 +108,21 @@ export default function (component) {
 				}
 				row.appendChild(cell);
 			}
+
+			const summaryCell = document.createElement("td");
+			summaryCell.classList.add("col-summary");
+			if (naoEnviadoCount > 0) {
+				summaryCell.innerHTML = `<span class="summary-badge">${naoEnviadoCount}</span>`;
+			} else {
+				summaryCell.innerHTML = `<span class="summary-badge summary-badge--zero">${naoEnviadoCount}</span>`;
+			}
+			row.appendChild(summaryCell);
+
 			tableBody.appendChild(row);
 		});
 		parentElement.querySelector("#nextMonth").disabled = (year > today.getFullYear() || (year === today.getFullYear() && month >= today.getMonth()));
 		parentElement.querySelector("#monthYear").textContent = monthNames[month] + " " + year;
+		setTriggerValue('clicked',`${month + 1}-${year}`);
 	}
 
 	function changeMonth(offset) {
