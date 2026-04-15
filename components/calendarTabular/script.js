@@ -86,8 +86,8 @@ export default function (component) {
 		tableBody.innerHTML = "";
 
 		const dadosFiltrados = data.filter(item => {
-			const dateIn = new Date(item.date_in);
-			return dateIn.getMonth() === month && dateIn.getFullYear() === year;
+			const [y, m] = item.date_in.split('-').map(Number);
+			return (m - 1) === month && y === year;
 		});
 		const projetos = [...new Set(dadosFiltrados.map(item => item.obra))];
 
@@ -117,7 +117,7 @@ export default function (component) {
 
 				if (cellDate <= today) {
 					const status = dadosFiltro.includes(dateString) ? 'check' : 'x';
-
+	
 					if (status === 'x' && !isWeekend && !isFeriado)
 						naoEnviadoCount++;
 
